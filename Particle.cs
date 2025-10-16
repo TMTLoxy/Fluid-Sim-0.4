@@ -30,11 +30,5 @@ namespace Fluid_Sim_0._4
         {
 
         }
-        public (int x, int y) getGridSquare((float width, float height) gridSquare)
-        {
-            int y = (int)(pos.Y / gridSquare.height);
-            int x = (int)(pos.X / gridSquare.width);
-            return (x, y);
-        } 
     }
 }

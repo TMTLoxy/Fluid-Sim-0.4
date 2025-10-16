@@ -16,7 +16,6 @@ namespace Fluid_Sim_0._4
         private float[,] densities;
 
         // sim stuff
-        private GridSquare[,] gridSquares;
         private int gridSquaresYCount;
         private int gridSquaresXCount;
         public SimulationWindow()
@@ -26,15 +25,6 @@ namespace Fluid_Sim_0._4
 
         private void SimulationClock_Tick(object sender, EventArgs e)
         {
-            // Clear all the gridSquares so their particle List's can be appended at the end of the function
-            for (int i = 0; i < gridSquaresYCount; i++)
-            {
-                for (int j = 0; j < gridSquaresXCount; j++)
-                {
-                    gridSquares[i, j].Clear();
-                }
-            }
-
             // - Object collision check
             // - Particle collision stuff
             // - graphics refresh
