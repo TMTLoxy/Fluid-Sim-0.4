@@ -9,6 +9,7 @@ using System.Xml.Schema;
 using System.Drawing;
 using System.Security.Policy;
 using System.Diagnostics;
+using System.Globalization;
 
 namespace Fluid_Sim_0._4
 {
@@ -31,6 +32,9 @@ namespace Fluid_Sim_0._4
 
         public abstract float BoundaryDist(Vector2 centre);
         // gets distance from centre 
+
+        public Vector2 getCentre() => centre;
+        public float getBoundaryDist() => boundaryDist;
     }
 
     class SDFBezier : SDFObject, IWinding
@@ -46,7 +50,7 @@ namespace Fluid_Sim_0._4
 
         public override float SDF(Vector2 d)
         {
-            // do the sdf stuff
+            // do a bunch of back propagation stuff idk find closest distance
         }
 
         public override float BoundaryDist(Vector2 centre)
@@ -70,7 +74,6 @@ namespace Fluid_Sim_0._4
             return totalWinding;
         }
     }
-    // generalise the bezier curves later cba rn
     // once generalised, sample point num = the power of curve (ie quadratic = 2), then number of sample = 2 + 1 = 3
 
     class SDF_BezierShape : SDFObject
