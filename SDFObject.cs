@@ -33,6 +33,8 @@ namespace Fluid_Sim_0._4
         public abstract float BoundaryDist(Vector2 centre);
         // gets distance from centre 
 
+        public abstract Vector2 estimateNormal(Vector2 p);
+
         public Vector2 getCentre() => centre;
         public float getBoundaryDist() => boundaryDist;
     }
@@ -51,6 +53,14 @@ namespace Fluid_Sim_0._4
         public override float SDF(Vector2 d)
         {
             // do a bunch of back propagation stuff idk find closest distance
+        }
+        public override Vector2 estimateNormal(Vector2 p)
+        {
+            float eps = 0.001f;
+            float dx = SDF(p + new Vector2(eps, 0)) - SDF(p - new Vector2(eps, 0));
+            float dy = SDF(p + new Vector2(0, eps)) - SDF(p - new Vector2(0, eps));
+            Vector2 n = new Vector2(dx, dy);
+            return Vector2.Normalize(n);
         }
 
         public override float BoundaryDist(Vector2 centre)
@@ -94,6 +104,15 @@ namespace Fluid_Sim_0._4
 
             bool insideShape = ComputeWinding(d, lineSegments);
             return insideShape ? -minDist : minDist;
+        }
+        public override Vector2 estimateNormal(Vector2 p)
+        {
+            // estimates a normal vector using very small epsilon value to go either side of the point and create a normal based of the SDF values returned at those points
+            float eps = 0.001f;
+            float dx = SDF(p + new Vector2(eps, 0)) - SDF(p - new Vector2(eps, 0));
+            float dy = SDF(p + new Vector2(0, eps)) - SDF(p - new Vector2(0, eps));
+            Vector2 n = new Vector2(dx, dy);
+            return Vector2.Normalize(n);
         }
 
         public override float BoundaryDist(Vector2 centre)

@@ -40,10 +40,17 @@ namespace Fluid_Sim_0._4
         }
         public void ObjectCollision(SDFObject obj, float sdf)
         {
-            // find normal at nearest point on the curve using sdf 
-            // flip vel along normal
-            // redo vel for eurler
+            // gets normal, finds the velocity perpendicular and parallel to shape normal,
+            // computes new vels after collision then adjusts the particle's position to the edge of the shape
+            Vector2 n = obj.estimateNormal(pos);
+            Vector2 Vper = (Vector2.Dot(vel, n)) * n;
+            Vector2 Vpar = vel - Vper;
+            Vector2 newVper = -(Vper);
+            vel = newVper + Vpar;
+            // later can add some dampening and stuff 
+            pos -= sdf * n; 
         }
+
         public void Update()
         {
 
