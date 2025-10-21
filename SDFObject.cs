@@ -10,6 +10,8 @@ using System.Drawing;
 using System.Security.Policy;
 using System.Diagnostics;
 using System.Globalization;
+using System.Runtime.InteropServices;
+using System.Windows.Forms;
 
 namespace Fluid_Sim_0._4
 {
@@ -34,6 +36,21 @@ namespace Fluid_Sim_0._4
         // gets distance from centre 
 
         public abstract Vector2 estimateNormal(Vector2 p);
+        public int F(int n)
+        {
+            for (int i = 1; i < n; i++)
+            {
+                n *= n - i;
+            }
+            return n;
+        }
+        public float Bi(int n, int i)
+        {
+            int nF = F(n);
+            int iF = F(i);
+            int inF = F(n - i);
+            return nF / (iF * inF);
+        }
 
         public Vector2 getCentre() => centre;
         public float getBoundaryDist() => boundaryDist;
@@ -41,21 +58,45 @@ namespace Fluid_Sim_0._4
 
     class SDFBezier : SDFObject, IWinding
     {
-        private List<Vector2> samplePoints;
+        private int degree;
+        private List<Vector2> referancePoints;
+        private List<Vector2> samplePoints; // used during runtime for winding calculations
         private int samplePointsCount;
+        private List<Vector2> segments; // used before running to find normals and stuff
+        private List<Vector2> segmentNormals;
 
-        public SDFBezier(Vector2 centre, int degree) : base(centre)
+        public SDFBezier(Vector2 centre, int degree, List<Vector2> referancePoints) : base(centre)
         {
+            this.degree = degree;
             samplePoints = new List<Vector2>(degree);
             samplePointsCount = samplePoints.Count;
+            this.referancePoints = referancePoints;
+            generateSegments();
+            assignSegmentNormals();
         }
 
-        public override float SDF(Vector2 d)
+        public Vector2 BezierEquation(float t)
         {
-            // do a bunch of back propagation stuff idk find closest distance
+            // finds a point on any bezier curve given value t which is a value 0-1 and indicates how far along the curve the point is
+            Vector2 p = new Vector2(0, 0);
+            for (int i = 0; i < degree; i++)
+            {
+                float bi = Bi(degree, i);
+                float exp = (float)Math.Pow(1 - t, degree - i) * (float)Math.Pow(t, i);
+                p += bi * exp * referancePoints[i];
+            }
+            return p;
+        }
+
+        public override float SDF(Vector2 d, float influenceRad)
+        {
+            // TO-DO
+            // using normals and tangents and stuff idk find the shortest distance between each of the segments of a curve use whichever is smallest
+            // find the distance man 
         }
         public override Vector2 estimateNormal(Vector2 p)
         {
+            // just a place holder that was copy and pasted from SDF bezier shape, will not be used and will remove later
             float eps = 0.001f;
             float dx = SDF(p + new Vector2(eps, 0)) - SDF(p - new Vector2(eps, 0));
             float dy = SDF(p + new Vector2(0, eps)) - SDF(p - new Vector2(0, eps));
@@ -70,6 +111,7 @@ namespace Fluid_Sim_0._4
 
         public float getWinding(Vector2 p)
         {
+            // finds the total angle covered by a curve from point p
             float totalWinding = 0;
             Vector2 a = samplePoints[0] - p;
             for (int i = 1; i < samplePointsCount; i++)
@@ -83,8 +125,31 @@ namespace Fluid_Sim_0._4
             }
             return totalWinding;
         }
+        public void generateSegments()
+        {
+            // generates a list of vectors along the curve (segments) that are used to approximate the curve during particle collisions
+            float tInterval = 0.01f;
+            float t = 0;
+            Vector2 lastPoint = BezierEquation(t);
+            for (int i = 1; i < 1 / tInterval; i++)
+            {
+                t += tInterval;
+                Vector2 newPoint = BezierEquation(t);
+                segments.Add(newPoint - lastPoint);
+                lastPoint = newPoint;
+            }
+        }
+        public void assignSegmentNormals()
+        {
+            // -1/grad of segment gives normal, segment is just change y over change x so swap dy and dx then put -dx
+            for (int i = 0; i < segments.Count; i++)
+            {
+                Vector2 n = new Vector2(segments[i].Y, -segments[i].X);
+                segmentNormals.Add(n);
+            }
+        }
     }
-    // once generalised, sample point num = the power of curve (ie quadratic = 2), then number of sample = 2 + 1 = 3
+    
 
     class SDF_BezierShape : SDFObject
     {
