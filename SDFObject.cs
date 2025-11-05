@@ -13,6 +13,13 @@ using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
+// redo all of the sdf stuff so that 
+// if a particle is in object detection boundary
+// check it's distance to a bunch of points along the object ( use dist^2 to avoid sqrt )
+// get the points from the segment points of each curve
+// once you got the closest point check the segments of the curve either side of the point and get the sdf from there using the object winding 
+// (sack off doing the sdf for each curve as adds compexity)
+
 namespace Fluid_Sim_0._4
 {
     interface IWinding
@@ -60,18 +67,16 @@ namespace Fluid_Sim_0._4
     {
         private int degree;
         private List<Vector2> referancePoints;
-        private List<Vector2> samplePoints; // used during runtime for winding calculations
-        private int samplePointsCount;
         private List<Vector2> segments; // used before running to find normals and stuff
         private List<Vector2> segmentPoints;
+        private int segmentPointsCount;
 
         public SDFBezier(Vector2 centre, int degree, List<Vector2> referancePoints) : base(centre)
         {
             this.degree = degree;
-            samplePoints = new List<Vector2>(degree);
-            samplePointsCount = samplePoints.Count;
             this.referancePoints = referancePoints;
             generateSegments();
+            segmentPointsCount = segments.Count;
         }
 
         public Vector2 BezierEquation(float t)
@@ -87,24 +92,20 @@ namespace Fluid_Sim_0._4
             return p;
         }
 
-        public override float SDF(Vector2 d, float influenceRad)
+        public override float SDF(Vector2 d, float influenceRad, SDF_BezierShape obj)
         {
-            // TO-DO
-            // using normals and tangents and stuff idk find the shortest distance between each of the segments of a curve use whichever is smallest
-            // find the distance man 
-
             // for each segment, find the shortest distance to the segment from d
             float minDist = float.MaxValue;
-            for (int i = 0; i < segments.Count; i++)
+            for (int i = 0; i < segments.Count - 1; i++)
             {
-                Vector2 ba = segmentPoints[i + 1] - segmentPoints[i]; // rewrite so doesnt hit end of list
+                Vector2 ba = segmentPoints[i + 1] - segmentPoints[i]; 
                 float dotA = Vector2.Dot(d - segmentPoints[i], ba);
                 float SqrBa = ba.X * ba.X + ba.Y * ba.Y;
                 float t  = dotA / SqrBa;
                 float dist = Math.Max(0, Math.Min(1, t));
                 if (dist < minDist) minDist = dist;
             }
-            if (minDist < influenceRad)// return the dist with the sign, do the sign
+            if (minDist < influenceRad) bool inObj = obj.ComputeWinding(d, segments);
         }
         public override Vector2 estimateNormal(Vector2 p)
         {
@@ -125,10 +126,10 @@ namespace Fluid_Sim_0._4
         {
             // finds the total angle covered by a curve from point p
             float totalWinding = 0;
-            Vector2 a = samplePoints[0] - p;
-            for (int i = 1; i < samplePointsCount; i++)
+            Vector2 a = segmentPoints[0] - p;
+            for (int i = 0; i < segments.Count - 1; i++)
             {
-                Vector2 b = samplePoints[i] - p;
+                Vector2 b = segmentPoints[i + 1] - p;
                 float dot = Vector2.Dot(a, b);
                 float aSqr = a.X * a.X + a.Y * a.Y;
                 float bSqr = b.X * b.X + b.Y * b.Y;

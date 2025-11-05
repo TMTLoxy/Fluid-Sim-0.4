@@ -13,6 +13,13 @@ namespace Fluid_Sim_0._4
         private Vector2 prevPos;
         private Vector2 vel;
         private float influenceRad;
+        private Vector2 currentSquare;
+
+        private int gridXCount;
+        private int gridYCount;
+        private int windX;
+        private int windY;
+
 
         public Particle()
         {
@@ -53,7 +60,17 @@ namespace Fluid_Sim_0._4
 
         public void Update()
         {
-
+            // do all movement and stuff 
+            findGridSquare();
         }
+
+        private void findGridSquare()
+        {
+            int gridX = (int)(pos.X / windX);
+            int gridY = (int)(pos.Y / windY);
+            currentSquare = new Vector2(gridX, gridY);
+        }
+
+        private Vector2 getGridSquare() => currentSquare;
     }
 }

@@ -16,8 +16,9 @@ namespace Fluid_Sim_0._4
         private float[,] densities;
 
         // sim stuff
-        private int gridSquaresYCount;
-        private int gridSquaresXCount;
+        private List<Particle> particles;
+        private int particleCount;
+        private List<GridSquare> gridSquares;
         public SimulationWindow()
         {
             InitializeComponent();
@@ -28,13 +29,21 @@ namespace Fluid_Sim_0._4
             // - Object collision check
             // - Particle collision stuff
             // - graphics refresh
+            for (int i = 0; i < particleCount; i++)
+            {
+                // collision stuff
+                particles[i].Update();
+                // update all the grid squares to have new particles in
+            }
 
             refreshDensities();
+
         }
 
         public void refreshDensities()
         {
 
         }
+
     }
 }
