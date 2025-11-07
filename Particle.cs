@@ -26,9 +26,18 @@ namespace Fluid_Sim_0._4
 
         }
 
-        public void ParticleCollision(Particle incidentParticle)
+        public void ParticleCollision(Particle particle)
         {
             
+        }
+
+        public void particleCollisionCheck(Particle particle)
+        {
+            float dist = Vector2.Distance(pos, particle.pos);
+            if (dist <= influenceRad + particle.influenceRad)
+            {
+                ParticleCollision(particle);
+            }
         }
         public void ObjectBoundaryCollisionCheck(List<SDFObject> objects)
         {
@@ -71,6 +80,6 @@ namespace Fluid_Sim_0._4
             currentSquare = new Vector2(gridX, gridY);
         }
 
-        private Vector2 getGridSquare() => currentSquare;
+        public Vector2 getGridSquare() => currentSquare;
     }
 }
