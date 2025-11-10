@@ -69,8 +69,14 @@ namespace Fluid_Sim_0._4
 
         public void refreshDensities()
         {
+            // 1/6 pi * s^2 ( 3s^2 - 8s + 6)
+            // this gives the volume for the sum of the influence of the particles in the smoothing radius at s distance
 
+            // densitie at a given point p are the sum of the smoothing kernal values for all particles within the influence range of p
+            // where the kernal returns a value based of distance
+            // kernal: x^2 - 2x + 1
+            // the volume of the influence rad is always constant no matter that radius so do stuff
+            // volume = 1/6 pi * s^2 ( 3s^2 - 8s + 6)
         }
-
     }
 }
