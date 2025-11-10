@@ -7,7 +7,7 @@ using System.Numerics;
 
 namespace Fluid_Sim_0._4
 {
-    internal class Particle
+    public class Particle
     {
         private Vector2 pos;
         private Vector2 prevPos;

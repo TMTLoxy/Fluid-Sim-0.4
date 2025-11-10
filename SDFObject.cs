@@ -27,7 +27,7 @@ namespace Fluid_Sim_0._4
         float getWinding(Vector2 p);
         // find the total angle for a segment around point p
     }
-    abstract class SDFObject
+    public abstract class SDFObject
     {
         protected float boundaryDist;
         protected Vector2 centre;

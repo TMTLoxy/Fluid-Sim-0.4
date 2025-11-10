@@ -8,6 +8,7 @@ using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace Fluid_Sim_0._4
 {
@@ -15,6 +16,8 @@ namespace Fluid_Sim_0._4
     {
         // graphics stuff
         private float[,] densities;
+        private int windX;
+        private int windY;
 
         // sim stuff
         private List<Particle> particles;
@@ -77,6 +80,31 @@ namespace Fluid_Sim_0._4
             // kernal: x^2 - 2x + 1
             // the volume of the influence rad is always constant no matter that radius so do stuff
             // volume = 1/6 pi * s^2 ( 3s^2 - 8s + 6)
+        }
+
+        public void getDensity(Vector2 d, float smoothingRad)
+        {
+            // get rid of the get nearby particles its just here for sake of it
+            GridSquare sqr = getGridSquare(d);
+            Vector2 gridIndex = sqr.getIndex();
+            List<Particle> nearbyParticles = new List<Particle>();
+            for (int j = (int)gridIndex.X - 1; j < gridIndex.X + 1; j++)
+            {
+                for (int k = (int)gridIndex.Y - 1; k < gridIndex.Y + 1; k++)
+                {
+                    if (j < 0 || k < 0 || j >= gridSquares.GetLength(0) || k >= gridSquares.GetLength(1)) continue;
+                    nearbyParticles.AddRange(gridSquares[j, k].getParticles());
+                }
+            }
+
+
+        }
+
+        public GridSquare getGridSquare(Vector2 d)
+        {
+            int gridX = (int)(d.X / windX);
+            int gridY = (int)(d.Y / windY);
+            return gridSquares[gridX, gridY];
         }
     }
 }

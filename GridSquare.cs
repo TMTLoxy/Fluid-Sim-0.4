@@ -3,15 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Numerics;
 
 namespace Fluid_Sim_0._4
 {
-    internal class GridSquare
+    public class GridSquare
     {
         private List<Particle> particles;
         private List<SDFObject> objectWalls;
+        private Vector2 index;
 
-        public GridSquare(List<SDFObject> objs)
+        public GridSquare(List<SDFObject> objs, Vector2 index)
         {
             // go through all the objects and see which ones have bits in the square
             //   use their segment points
@@ -28,5 +30,6 @@ namespace Fluid_Sim_0._4
         {
             return particles;
         }
+        public Vector2 getIndex() => index;
     }
 }
