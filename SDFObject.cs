@@ -98,6 +98,7 @@ namespace Fluid_Sim_0._4
             float minDist = float.MaxValue;
             for (int i = 0; i < segments.Count - 1; i++)
             {
+                // gets shortest distance to straight edge/segment
                 Vector2 ba = segmentPoints[i + 1] - segmentPoints[i]; 
                 float dotA = Vector2.Dot(d - segmentPoints[i], ba);
                 float SqrBa = ba.X * ba.X + ba.Y * ba.Y;
