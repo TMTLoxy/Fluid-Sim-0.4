@@ -4,14 +4,17 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Numerics;
+using System.Security.Cryptography.X509Certificates;
 
 namespace Fluid_Sim_0._4
 {
+    // its a partlce
     public class Particle
     {
         private Vector2 pos;
         private Vector2 prevPos;
         private Vector2 vel;
+        private float mass;
         private float influenceRad;
         private Vector2 currentSquare;
 
@@ -28,7 +31,7 @@ namespace Fluid_Sim_0._4
 
         public void ParticleCollision(Particle particle)
         {
-            
+            // swap velocities for fully elastic collisions, think of it later
         }
 
         public void particleCollisionCheck(Particle particle)
@@ -67,6 +70,18 @@ namespace Fluid_Sim_0._4
             pos -= sdf * n; 
         }
 
+        public float getInfluence(Vector2 d)
+        {
+            float dist = Vector2.Distance(pos, d);
+            if (dist > influenceRad) return 0;
+            else
+            {
+                float nDist = 1 / dist;
+                float inf = (nDist - 1) * (nDist - 1);
+                return inf;
+            }
+        }
+
         public void Update()
         {
             // do all movement and stuff 
@@ -81,5 +96,7 @@ namespace Fluid_Sim_0._4
         }
 
         public Vector2 getGridSquare() => currentSquare;
+        public float getMass() => mass;
+        public Vector2 getPos() => pos;
     }
 }

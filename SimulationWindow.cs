@@ -5,6 +5,7 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Numerics;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -23,9 +24,12 @@ namespace Fluid_Sim_0._4
         private List<Particle> particles;
         private int particleCount;
         private GridSquare[,] gridSquares;
+        private float vol;
+        private float smoothingRad;
         public SimulationWindow()
         {
             InitializeComponent();
+            vol = getVol(smoothingRad); // need to assign smoothingRad
         }
 
         private void SimulationClock_Tick(object sender, EventArgs e)
@@ -42,17 +46,7 @@ namespace Fluid_Sim_0._4
                 // run collision checks against all object edges in that square and adjacent 
                 // run collision checks for all of those particles
 
-                Vector2 gridIndex = particles[i].getGridSquare();
-                List<Particle> nearbyParticles = new List<Particle>();
-                for (int j = (int)gridIndex.X - 1; j < gridIndex.X + 1; j++)
-                {
-                    for (int k = (int)gridIndex.Y - 1; k < gridIndex.Y + 1; k++)
-                    {
-                        if (j < 0 || k < 0 || j >= gridSquares.GetLength(0) || k >= gridSquares.GetLength(1)) continue;
-                        nearbyParticles.AddRange(gridSquares[j, k].getParticles());
-                    }
-                }
-
+                List<Particle> nearbyParticles = getNearbyParticles(particles[i].getPos());
                 for (int p = 0; p < nearbyParticles.Count; p++)
                 {
                     if (nearbyParticles[p] != particles[i])
@@ -72,39 +66,44 @@ namespace Fluid_Sim_0._4
 
         public void refreshDensities()
         {
-            // 1/6 pi * s^2 ( 3s^2 - 8s + 6)
-            // this gives the volume for the sum of the influence of the particles in the smoothing radius at s distance
-
-            // densitie at a given point p are the sum of the smoothing kernal values for all particles within the influence range of p
-            // where the kernal returns a value based of distance
-            // kernal: x^2 - 2x + 1
-            // the volume of the influence rad is always constant no matter that radius so do stuff
-            // volume = 1/6 pi * s^2 ( 3s^2 - 8s + 6)
+            // for each pixel in the display, run getDensity to get the density at that point
         }
 
-        public void getDensity(Vector2 d, float smoothingRad)
+        public float getDensity(Vector2 d)
         {
-            // get rid of the get nearby particles its just here for sake of it
-            GridSquare sqr = getGridSquare(d);
-            Vector2 gridIndex = sqr.getIndex();
-            List<Particle> nearbyParticles = new List<Particle>();
-            for (int j = (int)gridIndex.X - 1; j < gridIndex.X + 1; j++)
+            List<Particle> nearbyParticles = getNearbyParticles(d);
+            float density = 0f;
+            for (int i = 0; i < nearbyParticles.Count; i++)
             {
-                for (int k = (int)gridIndex.Y - 1; k < gridIndex.Y + 1; k++)
+                float influence = 1 / nearbyParticles[i].getInfluence(d);
+                density += influence * nearbyParticles[i].getMass();
+            }
+            return density / vol;
+        }
+
+        public float getVol(float s)
+        {
+            return (float)((1f / 6f) * Math.PI * s * s * (3 * s * s - 8 * s + 6));
+        }
+
+        public List<Particle> getNearbyParticles(Vector2 d)
+        {
+            int gridX = (int)d.X / windX;
+            int gridY = (int)d.Y / windY;
+            Vector2 gridIndex = new Vector2(gridX, gridY);
+
+            List<Particle> nearbyParticles = new List<Particle>();
+            for (int i = (int)gridIndex.X - 1; i < gridIndex.X + 1; i++)
+            {
+                for (int j = (int)gridIndex.Y - 1; j < gridIndex.Y + 1; j++)
                 {
-                    if (j < 0 || k < 0 || j >= gridSquares.GetLength(0) || k >= gridSquares.GetLength(1)) continue;
-                    nearbyParticles.AddRange(gridSquares[j, k].getParticles());
+                    if (i < 0 || j < 0 || i >= gridSquares.GetLength(0) || j >= gridSquares.GetLength(1)) continue; 
+                    // idk what gridSqares.getLength(0) does so change that to highest gridsquare index
+                    nearbyParticles.AddRange(gridSquares[i, j].getParticles());
                 }
             }
-
-
-        }
-
-        public GridSquare getGridSquare(Vector2 d)
-        {
-            int gridX = (int)(d.X / windX);
-            int gridY = (int)(d.Y / windY);
-            return gridSquares[gridX, gridY];
+            return nearbyParticles;
         }
     }
+}
 }
