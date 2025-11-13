@@ -37,7 +37,7 @@ namespace Fluid_Sim_0._4
             boundaryDist = BoundaryDist(centre);
         }
         public abstract float SDF(Vector2 d);
-        // where d is the signed distance to the nearest object edge
+        // where d is particle position
 
         public abstract float BoundaryDist(Vector2 centre);
         // gets distance from centre 
@@ -66,6 +66,7 @@ namespace Fluid_Sim_0._4
     class SDFBezier : SDFObject, IWinding
     {
         private int degree;
+        private Vector2 middle; // average of start and end points used to find closest edges to d
         private List<Vector2> referancePoints;
         private List<Vector2> segments; // used before running to find normals and stuff
         private List<Vector2> segmentPoints;
@@ -77,6 +78,7 @@ namespace Fluid_Sim_0._4
             this.referancePoints = referancePoints;
             generateSegments();
             segmentPointsCount = segments.Count;
+            middle = (segmentPoints[0] + (segmentPoints[segmentPoints.Count - 1])) / 2;
         }
 
         public Vector2 BezierEquation(float t)
@@ -92,10 +94,11 @@ namespace Fluid_Sim_0._4
             return p;
         }
 
-        public override float SDF(Vector2 d, float influenceRad, SDF_BezierShape obj)
+        public override float SDF(Vector2 d)
         {
             // for each segment, find the shortest distance to the segment from d
             float minDist = float.MaxValue;
+            Vector2 closestPoint = new Vector2(0, 0);
             for (int i = 0; i < segments.Count - 1; i++)
             {
                 Vector2 ba = segmentPoints[i + 1] - segmentPoints[i]; 
@@ -103,10 +106,23 @@ namespace Fluid_Sim_0._4
                 float SqrBa = ba.X * ba.X + ba.Y * ba.Y;
                 float t  = dotA / SqrBa;
                 float dist = Math.Max(0, Math.Min(1, t));
-                if (dist < minDist) minDist = dist;
+                if (dist < minDist)
+                {
+                    minDist = dist;
+                    closestPoint = segmentPoints[i] * t - ba;
+                }
             }
-            if (minDist < influenceRad) bool inObj = obj.ComputeWinding(d, segments);
+            if (isInside(d, closestPoint, centre)) return 0 - minDist;
+            return minDist;
         }
+        public bool isInside(Vector2 d, Vector2 closestPoint, Vector2 centre)
+        {
+            Vector2 distToCentre = centre - d;
+            Vector2 centreToClosest = closestPoint - centre;
+            if (distToCentre.LengthSquared() >= centreToClosest.LengthSquared()) return false;
+            return true;
+        }
+
         public override Vector2 estimateNormal(Vector2 p)
         {
             // just a place holder that was copy and pasted from SDF bezier shape, will not be used and will remove later
@@ -154,6 +170,8 @@ namespace Fluid_Sim_0._4
                 lastPoint = newPoint;
             }
         }
+
+        public Vector2 getMiddle() => middle;
     }
     
 
@@ -166,15 +184,15 @@ namespace Fluid_Sim_0._4
         }
         public override float SDF(Vector2 d)
         {
+            // go through each line and using middle find 3 closest edges to d and make list
+            
             // returns the mid distance to the shape from d, negative means inside shape, positive means outside
-            float minDist = float.MaxValue;
+            float sdf = float.MaxValue;
             foreach (var segment in lineSegments)
             {
-                minDist = (float)Math.Min(minDist, segment.SDF(d));
+                sdf = (float)Math.Min(sdf, segment.SDF(d));
             }
 
-            bool insideShape = ComputeWinding(d, lineSegments);
-            return insideShape ? -minDist : minDist;
         }
         public override Vector2 estimateNormal(Vector2 p)
         {
