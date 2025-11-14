@@ -1,6 +1,6 @@
 ﻿namespace Fluid_Sim_0._4
 {
-    partial class SimulationWindow
+    partial class MainMenu
     {
         /// <summary>
         /// Required designer variable.
@@ -28,40 +28,33 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
-            this.SimulationClock = new System.Windows.Forms.Timer(this.components);
-            this.EndSim_btn = new System.Windows.Forms.Button();
+            this.StartSimulation_btn = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
-            // SimulationClock
+            // StartSimulation_btn
             // 
-            this.SimulationClock.Tick += new System.EventHandler(this.SimulationClock_Tick);
+            this.StartSimulation_btn.Location = new System.Drawing.Point(360, 192);
+            this.StartSimulation_btn.Name = "StartSimulation_btn";
+            this.StartSimulation_btn.Size = new System.Drawing.Size(75, 23);
+            this.StartSimulation_btn.TabIndex = 0;
+            this.StartSimulation_btn.Text = "Start";
+            this.StartSimulation_btn.UseVisualStyleBackColor = true;
+            this.StartSimulation_btn.Click += new System.EventHandler(this.StartSimulation_btn_Click);
             // 
-            // EndSim_btn
-            // 
-            this.EndSim_btn.Location = new System.Drawing.Point(713, 12);
-            this.EndSim_btn.Name = "EndSim_btn";
-            this.EndSim_btn.Size = new System.Drawing.Size(75, 23);
-            this.EndSim_btn.TabIndex = 0;
-            this.EndSim_btn.Text = "End";
-            this.EndSim_btn.UseVisualStyleBackColor = true;
-            this.EndSim_btn.Click += new System.EventHandler(this.EndSim_btn_Click);
-            // 
-            // SimulationWindow
+            // MainMenu
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
-            this.Controls.Add(this.EndSim_btn);
-            this.Name = "SimulationWindow";
-            this.Text = "SimulationWindow";
+            this.Controls.Add(this.StartSimulation_btn);
+            this.Name = "MainMenu";
+            this.Text = "MainMenu";
             this.ResumeLayout(false);
 
         }
 
         #endregion
 
-        private System.Windows.Forms.Timer SimulationClock;
-        private System.Windows.Forms.Button EndSim_btn;
+        private System.Windows.Forms.Button StartSimulation_btn;
     }
 }

@@ -13,12 +13,20 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace Fluid_Sim_0._4
 {
+    // TO-DO list in Program.cs
     public partial class SimulationWindow : Form
     {
         // graphics stuff
+        private Form mainMenu;
+
         private float[,] densities;
         private int windX;
         private int windY;
+
+            // dev particle drawing things
+        private Brush[] colours = { Brushes.Red, Brushes.Orange, Brushes.Yellow, Brushes.Green, Brushes.Blue, Brushes.Purple };
+        private float rad = 5f;
+        private int frameCount = 0;
 
         // sim stuff
         private List<Particle> particles;
@@ -26,10 +34,36 @@ namespace Fluid_Sim_0._4
         private GridSquare[,] gridSquares;
         private float vol;
         private float smoothingRad;
-        public SimulationWindow()
+        public SimulationWindow(Form mainMenu)
         {
             InitializeComponent();
+
+            // sim initialization
             vol = getVol(smoothingRad); // need to assign smoothingRad
+
+            particleCount = 100; // can be made to be adjustable later
+            particles = new List<Particle>();
+            Vector2 initPos = new Vector2(this.Width / 2, this.Height / 2);
+            for (int i = 0; i < particleCount - 1; i++)
+            {
+                particles.Add(new Particle(initPos));
+                initPos += new Vector2(1f, 1f); 
+            }
+
+            // graphics initialization
+            this.mainMenu = mainMenu;
+
+            this.Paint += new PaintEventHandler(PaintParticles);
+            this.SetStyle(
+                ControlStyles.OptimizedDoubleBuffer |
+                ControlStyles.AllPaintingInWmPaint |
+                ControlStyles.UserPaint,
+                true);
+
+            windX = this.Width; // can be adjusted to fit in buttons or whatever
+            windY = this.Height;
+            // dev tools
+
         }
 
         private void SimulationClock_Tick(object sender, EventArgs e)
@@ -62,6 +96,8 @@ namespace Fluid_Sim_0._4
 
             refreshDensities();
 
+            // draw next frame
+            this.Refresh();
         }
 
         public void refreshDensities()
@@ -104,6 +140,33 @@ namespace Fluid_Sim_0._4
             }
             return nearbyParticles;
         }
+
+
+        // GRAPHICS
+
+            // dev particle drawing
+        private void PaintParticles(object sender, PaintEventArgs e)
+        {
+            // graphics settings
+            e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+
+            // wipe previous frame
+            e.Graphics.Clear(this.BackColor);
+
+            // draw new frame
+
+            for (int i = 0; i < particles.Count; i++)
+            {
+                e.Graphics.FillEllipse(colours[i % 6], particles[i].getPos().X - rad, particles[i].getPos().Y - rad, rad * 2, rad * 2);
+            }
+        }
+
+
+        // GUI stuff
+        private void EndSim_btn_Click(object sender, EventArgs e)
+        {
+            mainMenu.Show();
+            this.Close();
+        }
     }
-}
 }

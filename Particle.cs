@@ -8,6 +8,7 @@ using System.Security.Cryptography.X509Certificates;
 
 namespace Fluid_Sim_0._4
 {
+    // TO-DO list in Program.cs
     // its a partlce
     public class Particle
     {
@@ -24,9 +25,9 @@ namespace Fluid_Sim_0._4
         private int windY;
 
 
-        public Particle()
+        public Particle(Vector2 initPos)
         {
-
+            pos = initPos;
         }
 
         public void ParticleCollision(Particle particle)
@@ -42,7 +43,7 @@ namespace Fluid_Sim_0._4
                 ParticleCollision(particle);
             }
         }
-        public void ObjectBoundaryCollisionCheck(List<SDFObject> objects)
+        public void ObjectBoundaryCollisionCheck(List<SDF_BezierShape> objects)
         {
             // for each object check distance to that obejct, if dist > mincheck then dont check
             for (int i = 0; i < objects.Count; i++)
@@ -52,12 +53,12 @@ namespace Fluid_Sim_0._4
                     ObjectCollisionCheck(objects[i]);
             }
         }
-        public void ObjectCollisionCheck(SDFObject obj)
+        public void ObjectCollisionCheck(SDF_BezierShape obj)
         {
             float sdf = obj.SDF(pos);
             if (sdf <= 0) ObjectCollision(obj, sdf);
         }
-        public void ObjectCollision(SDFObject obj, float sdf)
+        public void ObjectCollision(SDF_BezierShape obj, float sdf)
         {
             // gets normal, finds the velocity perpendicular and parallel to shape normal,
             // computes new vels after collision then adjusts the particle's position to the edge of the shape

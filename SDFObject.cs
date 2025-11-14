@@ -12,20 +12,16 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
-
-// redo all of the sdf stuff so that 
-// if a particle is in object detection boundary
-// check it's distance to a bunch of points along the object ( use dist^2 to avoid sqrt )
-// get the points from the segment points of each curve
-// once you got the closest point check the segments of the curve either side of the point and get the sdf from there using the object winding 
-// (sack off doing the sdf for each curve as adds compexity)
+//TO-DO
+// only check closest 3 segments for sdf calc rather then all of them just to optimise
 
 namespace Fluid_Sim_0._4
 {
-    interface IWinding
+    // TO-DO list in Program.cs
+    interface estNormal
     {
-        float getWinding(Vector2 p);
-        // find the total angle for a segment around point p
+        Vector2 estimateNormal(Vector2 p);
+        // estimates the normal at point p
     }
     public abstract class SDFObject
     {
@@ -42,7 +38,6 @@ namespace Fluid_Sim_0._4
         public abstract float BoundaryDist(Vector2 centre);
         // gets distance from centre 
 
-        public abstract Vector2 estimateNormal(Vector2 p);
         public int F(int n)
         {
             for (int i = 1; i < n; i++)
@@ -63,7 +58,7 @@ namespace Fluid_Sim_0._4
         public float getBoundaryDist() => boundaryDist;
     }
 
-    class SDFBezier : SDFObject, IWinding
+    class SDFBezier : SDFObject
     {
         private int degree;
         private Vector2 middle; // average of start and end points used to find closest edges to d
@@ -118,42 +113,17 @@ namespace Fluid_Sim_0._4
         }
         public bool isInside(Vector2 d, Vector2 closestPoint, Vector2 centre)
         {
+            // kinda iffy method but should work in almost all cases
+            // checks distance from centre to closest point and distance from centre to d, if dist is < closest point then d is inside
             Vector2 distToCentre = centre - d;
             Vector2 centreToClosest = closestPoint - centre;
             if (distToCentre.LengthSquared() >= centreToClosest.LengthSquared()) return false;
             return true;
         }
 
-        public override Vector2 estimateNormal(Vector2 p)
-        {
-            // just a place holder that was copy and pasted from SDF bezier shape, will not be used and will remove later
-            float eps = 0.001f;
-            float dx = SDF(p + new Vector2(eps, 0)) - SDF(p - new Vector2(eps, 0));
-            float dy = SDF(p + new Vector2(0, eps)) - SDF(p - new Vector2(0, eps));
-            Vector2 n = new Vector2(dx, dy);
-            return Vector2.Normalize(n);
-        }
-
         public override float BoundaryDist(Vector2 centre)
         {
             throw new NotImplementedException();
-        }
-
-        public float getWinding(Vector2 p)
-        {
-            // finds the total angle covered by a curve from point p
-            float totalWinding = 0;
-            Vector2 a = segmentPoints[0] - p;
-            for (int i = 0; i < segments.Count - 1; i++)
-            {
-                Vector2 b = segmentPoints[i + 1] - p;
-                float dot = Vector2.Dot(a, b);
-                float aSqr = a.X * a.X + a.Y * a.Y;
-                float bSqr = b.X * b.X + b.Y * b.Y;
-                totalWinding += (float)Math.Acos(dot / (float)Math.Sqrt(aSqr * bSqr));
-                a = b;
-            }
-            return totalWinding;
         }
         public void generateSegments()
         {
@@ -176,7 +146,7 @@ namespace Fluid_Sim_0._4
     }
     
 
-    class SDF_BezierShape : SDFObject
+    public class SDF_BezierShape : SDFObject, estNormal
     {
         private List<SDFBezier> lineSegments = new List<SDFBezier>();
         public SDF_BezierShape(Vector2 centre) : base(centre)
@@ -185,17 +155,17 @@ namespace Fluid_Sim_0._4
         }
         public override float SDF(Vector2 d)
         {
-            // go through each line and using middle find 3 closest edges to d and make list
-            
+            // eventually only use 3 closest line segments for efficiency
+
             // returns the mid distance to the shape from d, negative means inside shape, positive means outside
             float sdf = float.MaxValue;
             foreach (var segment in lineSegments)
             {
                 sdf = (float)Math.Min(sdf, segment.SDF(d));
             }
-
+            return sdf;
         }
-        public override Vector2 estimateNormal(Vector2 p)
+        public Vector2 estimateNormal(Vector2 p)
         {
             // estimates a normal vector using very small epsilon value to go either side of the point and create a normal based of the SDF values returned at those points
             float eps = 0.001f;
@@ -214,18 +184,6 @@ namespace Fluid_Sim_0._4
             }
             // + 20 is a random amount, is thickens of boundary, thicker = more accurate but slower to run
             return maxDist + 20;
-        }
-
-        public bool ComputeWinding(Vector2 p, List<SDFBezier> lineSegments)
-        {
-            // if winding angle is multiple of 2Pi then p is inside, else outside
-            float totalAngle = 0;
-            for (int i = 0; i < lineSegments.Count(); i++)
-            {
-                totalAngle += lineSegments[i].getWinding(p);
-            }
-            float angleMod = totalAngle % (2 * (float)Math.PI);
-            return angleMod == 0 ? true : false;
         }
     }
 }
