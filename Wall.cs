@@ -5,41 +5,32 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Numerics;
 using System.Windows.Forms;
+using System.Runtime.InteropServices;
 
 namespace Fluid_Sim_0._4
 {
     public abstract class Wall
     {
-        protected Vector2 pos1;
-        protected Vector2 pos2;
-        protected int wallSideIndex; // 1/-1, -1 = below/ to left etc.
-        protected float maxVal;
-        protected Wall linkedWall;
+        protected int borderVal;
 
-
-        public Wall(Vector2 pos1, Vector2 pos2, int wallSideIndex)
+        public Wall(int borderVal)
         {
-            this.pos1 = pos1;
-            this.pos2 = pos2;
-            this.wallSideIndex = wallSideIndex;
-            maxVal = Math.Max(Math.Abs(pos2.X - pos1.X), Math.Abs(pos2.Y - pos1.Y));
+            this.borderVal = borderVal;
         }
-
-        public abstract void linkWall();
     }
 
     class VerticleWall : Wall
     {
         // reflect x vel
-        public VerticleWall()
+        public VerticleWall(int borderVal) : base(borderVal)
         {
-
+            
         }
     }
     class HorizontalWall : Wall
     {
         // reflect y vel
-        public HorizontalWall()
+        public HorizontalWall(int borderVal) : base(borderVal)
         {
 
         }
