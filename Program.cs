@@ -15,6 +15,7 @@ namespace Fluid_Sim_0._4
         // TO-DO
         // -movement calculations for particles, get them moving around
         // -wall class where you can turn them on/ off & link them etc (simple object collisions as they straight lines)
+        //   -do the walls with inheritance and stuff, get good way of checking for collisions
         // -try getting a shape on screen
         // -get grid squares working, initialize them, get them being assigned correctly (mainly get sim running)
         static void Main()

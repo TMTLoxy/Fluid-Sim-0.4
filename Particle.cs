@@ -71,6 +71,14 @@ namespace Fluid_Sim_0._4
             pos -= sdf * n; 
         }
 
+        public void checkWallCollisions(Wall[] walls)
+        {
+            for (int i = 0; i < walls.Length; i++)
+            {
+                walls[i].checkCollision(this);
+            }
+        }
+
         public float getInfluence(Vector2 d)
         {
             float dist = Vector2.Distance(pos, d);
@@ -96,8 +104,11 @@ namespace Fluid_Sim_0._4
             currentSquare = new Vector2(gridX, gridY);
         }
 
+        public void setVel(Vector2 newVel) => vel = newVel; 
+
         public Vector2 getGridSquare() => currentSquare;
         public float getMass() => mass;
         public Vector2 getPos() => pos;
+        public Vector2 getVel() => vel;
     }
 }

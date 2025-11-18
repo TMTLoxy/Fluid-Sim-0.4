@@ -67,6 +67,7 @@
     <Compile Include="SimulationWindow.Designer.cs">
       <DependentUpon>SimulationWindow.cs</DependentUpon>
     </Compile>
+    <Compile Include="Wall.cs" />
     <EmbeddedResource Include="MainMenu.resx">
       <DependentUpon>MainMenu.cs</DependentUpon>
     </EmbeddedResource>
