@@ -12,6 +12,8 @@ namespace Fluid_Sim_0._4
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
+        // this version (0.4) is entirely new and has been completely rewritten since the last code check (version 0.3)
+
         // TO-DO
         // -movement calculations for particles, get them moving around
         // -wall class where you can turn them on/ off & link them etc (simple object collisions as they straight lines)

@@ -34,6 +34,7 @@ namespace Fluid_Sim_0._4
         private GridSquare[,] gridSquares;
         private float vol;
         private float smoothingRad;
+        private List<Wall> walls;
         public SimulationWindow(Form mainMenu)
         {
             InitializeComponent();
@@ -49,6 +50,15 @@ namespace Fluid_Sim_0._4
                 particles.Add(new Particle(initPos));
                 initPos += new Vector2(1f, 1f); 
             }
+
+            // set walls
+            walls = new List<Wall>();
+            walls.Add(new VerticleWall(0, false, null));              // left
+            walls.Add(new VerticleWall(this.Width, true, null));      // right
+            walls.Add(new HorizontalWall(0, false, null));            // top
+            walls.Add(new HorizontalWall(this.Height, true, null));   // bottom
+            // ioIndicator : true => outside the simulation is greater than the borderVal
+            // currently no linked walls can add later once program is working (used mainly in wind tunnel)
 
             // graphics initialization
             this.mainMenu = mainMenu;

@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Numerics;
 using System.Security.Cryptography.X509Certificates;
+using System.ComponentModel;
 
 namespace Fluid_Sim_0._4
 {
@@ -71,11 +72,14 @@ namespace Fluid_Sim_0._4
             pos -= sdf * n; 
         }
 
-        public void checkWallCollisions(Wall[] walls)
+        public void wallCollisions(List<Wall> walls)
         {
-            for (int i = 0; i < walls.Length; i++)
+            for (int i = 0; i < walls.Count; i++)
             {
-                walls[i].checkCollision(this);
+                if (walls[i].checkCollision(this))
+                {
+                    walls[i].doCollision(this);
+                }                
             }
         }
 
@@ -105,10 +109,12 @@ namespace Fluid_Sim_0._4
         }
 
         public void setVel(Vector2 newVel) => vel = newVel; 
+        public void setPos(Vector2 newPos) => pos = newPos;
 
         public Vector2 getGridSquare() => currentSquare;
         public float getMass() => mass;
         public Vector2 getPos() => pos;
+        public Vector2 getPrevPos() => prevPos;
         public Vector2 getVel() => vel;
     }
 }
