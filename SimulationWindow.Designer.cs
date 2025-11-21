@@ -35,6 +35,7 @@
             // 
             // SimulationClock
             // 
+            this.SimulationClock.Enabled = true;
             this.SimulationClock.Tick += new System.EventHandler(this.SimulationClock_Tick);
             // 
             // EndSim_btn

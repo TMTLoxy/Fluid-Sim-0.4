@@ -35,6 +35,8 @@ namespace Fluid_Sim_0._4
         private float vol;
         private float smoothingRad;
         private List<Wall> walls;
+        private float timeInterval;
+        private float g = 9.81f;
         public SimulationWindow(Form mainMenu)
         {
             InitializeComponent();
@@ -59,6 +61,8 @@ namespace Fluid_Sim_0._4
             walls.Add(new HorizontalWall(this.Height, true, null));   // bottom
             // ioIndicator : true => outside the simulation is greater than the borderVal
             // currently no linked walls can add later once program is working (used mainly in wind tunnel)
+
+            timeInterval = 1f / this.SimulationClock.Interval; // seconds per tick
 
             // graphics initialization
             this.mainMenu = mainMenu;
@@ -100,7 +104,7 @@ namespace Fluid_Sim_0._4
                 }
                 // collision stuff
 
-                particles[i].Update();
+                particles[i].Update(timeInterval, g);
                 // update all the grid squares to have new particles in
             }
 
@@ -144,7 +148,6 @@ namespace Fluid_Sim_0._4
                 for (int j = (int)gridIndex.Y - 1; j < gridIndex.Y + 1; j++)
                 {
                     if (i < 0 || j < 0 || i >= gridSquares.GetLength(0) || j >= gridSquares.GetLength(1)) continue; 
-                    // idk what gridSqares.getLength(0) does so change that to highest gridsquare index
                     nearbyParticles.AddRange(gridSquares[i, j].getParticles());
                 }
             }

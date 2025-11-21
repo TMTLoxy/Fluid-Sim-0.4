@@ -95,9 +95,11 @@ namespace Fluid_Sim_0._4
             }
         }
 
-        public void Update()
+        public void Update(float timeInterval, float g)
         {
-            // do all movement and stuff 
+            // do all movement and stuff
+            vel.Y += g;
+            pos = pos + (vel * timeInterval);
             findGridSquare();
         }
 

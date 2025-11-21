@@ -20,6 +20,7 @@ namespace Fluid_Sim_0._4
         //   -do the walls with inheritance and stuff, get good way of checking for collisions
         // -try getting a shape on screen
         // -get grid squares working, initialize them, get them being assigned correctly (mainly get sim running)
+        //   -gridSquares array not initialized yet
         static void Main()
         {
             Application.EnableVisualStyles();
