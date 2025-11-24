@@ -31,27 +31,35 @@ namespace Fluid_Sim_0._4
         // sim stuff
         private List<Particle> particles;
         private int particleCount;
-        private GridSquare[,] gridSquares;
-        private float vol;
         private float smoothingRad;
+
+        private GridSquare[,] gridSquares;
+        private float gridSquareWidth;
+        private float gridSquareHeight;
         private List<Wall> walls;
+
         private float timeInterval;
         private float g = 9.81f;
-        public SimulationWindow(Form mainMenu)
+        private float vol;
+        public SimulationWindow(Form mainMenu, 
+            int particleCount, float smoothingRad, 
+            int gridSquareXCount, int gridSquareYCount)
         {
             InitializeComponent();
 
             // sim initialization
             vol = getVol(smoothingRad); // need to assign smoothingRad
 
-            particleCount = 100; // can be made to be adjustable later
+            this.particleCount = particleCount; // can be made to be adjustable later
             particles = new List<Particle>();
             Vector2 initPos = new Vector2(this.Width / 2, this.Height / 2);
-            for (int i = 0; i < particleCount - 1; i++)
+            for (int i = 0; i < particleCount; i++)
             {
                 particles.Add(new Particle(initPos));
                 initPos += new Vector2(1f, 1f); 
             }
+
+            simGridSetup(gridSquareXCount, gridSquareYCount);
 
             // set walls
             walls = new List<Wall>();
@@ -82,6 +90,8 @@ namespace Fluid_Sim_0._4
 
         private void SimulationClock_Tick(object sender, EventArgs e)
         {
+            frameCount++;
+
             // - Object collision check
             // - Particle collision stuff
             // - graphics refresh
@@ -94,6 +104,7 @@ namespace Fluid_Sim_0._4
                 // run collision checks against all object edges in that square and adjacent 
                 // run collision checks for all of those particles
 
+                // Particle Collisions
                 List<Particle> nearbyParticles = getNearbyParticles(particles[i].getPos());
                 for (int p = 0; p < nearbyParticles.Count; p++)
                 {
@@ -102,9 +113,10 @@ namespace Fluid_Sim_0._4
                         particles[i].particleCollisionCheck(nearbyParticles[p]);
                     }
                 }
-                // collision stuff
+                // Wall Collisions
+                particles[i].wallCollisions(walls);
 
-                particles[i].Update(timeInterval, g);
+                particles[i].Update(timeInterval, g, gridSquareWidth, gridSquareHeight);
                 // update all the grid squares to have new particles in
             }
 
@@ -152,6 +164,20 @@ namespace Fluid_Sim_0._4
                 }
             }
             return nearbyParticles;
+        }
+
+        public void simGridSetup(int gridSquareXCount, int gridSquareYCount)
+        {
+            gridSquareWidth = this.Width / gridSquareXCount;
+            gridSquareHeight = this.Height / gridSquareYCount;
+            gridSquares = new GridSquare[gridSquareXCount, gridSquareYCount];
+            for (int i = 0; i < gridSquareXCount; i++)
+            {
+                for (int j = 0; j < gridSquareYCount; j++)
+                {
+                    gridSquares[i, j] = new GridSquare(new Vector2(i, j), gridSquareWidth, gridSquareHeight);
+                }
+            }
         }
 
 

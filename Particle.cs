@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Numerics;
 using System.Security.Cryptography.X509Certificates;
 using System.ComponentModel;
+using System.Diagnostics;
 
 namespace Fluid_Sim_0._4
 {
@@ -76,8 +77,10 @@ namespace Fluid_Sim_0._4
         {
             for (int i = 0; i < walls.Count; i++)
             {
+                Debug.WriteLine("Wall Collision Check..."); // DT
                 if (walls[i].checkCollision(this))
                 {
+                    Debug.WriteLine("Wall Collision Detected"); // DT
                     walls[i].doCollision(this);
                 }                
             }
@@ -95,18 +98,18 @@ namespace Fluid_Sim_0._4
             }
         }
 
-        public void Update(float timeInterval, float g)
+        public void Update(float timeInterval, float g, float gridSquareWidth, float gridSquareHeight)
         {
             // do all movement and stuff
             vel.Y += g;
             pos = pos + (vel * timeInterval);
-            findGridSquare();
+            findGridSquare(gridSquareWidth, gridSquareHeight);
         }
 
-        private void findGridSquare()
+        private void findGridSquare(float gridSquareWidth, float gridSquareHeight)
         {
-            int gridX = (int)(pos.X / windX);
-            int gridY = (int)(pos.Y / windY);
+            int gridX = (int)(pos.X / gridSquareWidth);
+            int gridY = (int)(pos.Y / gridSquareHeight);
             currentSquare = new Vector2(gridX, gridY);
         }
 
