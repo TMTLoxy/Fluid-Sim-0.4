@@ -77,7 +77,7 @@ namespace Fluid_Sim_0._4
         {
             for (int i = 0; i < walls.Count; i++)
             {
-                Debug.WriteLine("Wall Collision Check..."); // DT
+                //Debug.WriteLine("Wall Collision Check..."); // DT
                 if (walls[i].checkCollision(this))
                 {
                     Debug.WriteLine("Wall Collision Detected"); // DT
@@ -100,9 +100,10 @@ namespace Fluid_Sim_0._4
 
         public void Update(float timeInterval, float g, float gridSquareWidth, float gridSquareHeight)
         {
+            prevPos = pos;
             // do all movement and stuff
             vel.Y += g;
-            pos = pos + (vel * timeInterval);
+            pos = prevPos + (vel * timeInterval);
             findGridSquare(gridSquareWidth, gridSquareHeight);
         }
 

@@ -13,10 +13,11 @@ namespace Fluid_Sim_0._4
     public partial class MainMenu : Form
     {
         // all of the sim stuff, will be fetched from menu screen later currently just initializing here
-        private int particleCount = 1;
+        private int particleCount = 100;
         private float smoothingRad = 2;
         private int gridSquareXCount = 5;
         private int gridSquareYCount = 5;
+        private int msPerTick = 1000;
 
         public MainMenu()
         {
@@ -25,7 +26,7 @@ namespace Fluid_Sim_0._4
 
         private void StartSimulation_btn_Click(object sender, EventArgs e)
         {
-            Form SimWindow = new SimulationWindow(this, particleCount, smoothingRad, gridSquareXCount, gridSquareYCount);
+            Form SimWindow = new SimulationWindow(this, particleCount, smoothingRad, gridSquareXCount, gridSquareYCount, msPerTick);
             this.Hide();
             SimWindow.Show();
         }

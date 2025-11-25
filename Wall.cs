@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Numerics;
 using System.Windows.Forms;
 using System.Runtime.InteropServices;
+using System.Diagnostics;
 
 namespace Fluid_Sim_0._4
 {
@@ -20,19 +21,11 @@ namespace Fluid_Sim_0._4
         {
             this.borderVal = borderVal;
             this.linkedWall = linkedWall;
+            Debug.WriteLine("Wall borderVal: " + Convert.ToString(borderVal)); // DT
         }
 
 
-        public bool checkCollision(Particle incParticle)
-        {
-            if (ioIndicator)
-            {
-                if (incParticle.getPrevPos().X < borderVal & incParticle.getPos().X >= borderVal) return true;
-                return false;
-            }
-            else if (incParticle.getPrevPos().X >= borderVal & incParticle.getPos().X < borderVal) return true;
-            return false;
-        }
+        public abstract bool checkCollision(Particle incParticle);
 
         public abstract void wallCollision(Particle incParticle);
         public abstract void linkedWallCollision(Particle incParticle); // can be done later, not essential
@@ -56,6 +49,14 @@ namespace Fluid_Sim_0._4
             incParticle.setPos(incParticle.getPrevPos());
             incParticle.setVel(new Vector2(-incParticle.getVel().X, incParticle.getVel().Y));
         }
+        public override bool checkCollision(Particle incParticle)
+        {
+            float prevPos = incParticle.getPrevPos().X;
+            float pos = incParticle.getPos().X;
+            if (prevPos < borderVal & pos >= borderVal & !ioIndicator) return true;
+            else if (prevPos >= borderVal & pos < borderVal) return true;
+            return false;
+        }
         public override void linkedWallCollision(Particle incParticle)
         {
             
@@ -72,6 +73,15 @@ namespace Fluid_Sim_0._4
         {
             incParticle.setPos(incParticle.getPrevPos());
             incParticle.setVel(new Vector2(incParticle.getVel().X, -incParticle.getVel().Y));
+        }
+
+        public override bool checkCollision(Particle incParticle)
+        {
+            float prevPos = incParticle.getPrevPos().Y;
+            float  pos = incParticle.getPos().Y;
+            if (prevPos < borderVal & pos >= borderVal & !ioIndicator) return true;
+            else if (prevPos >= borderVal & pos < borderVal) return true;
+            return false;
         }
         public override void linkedWallCollision(Particle incParticle)
         {

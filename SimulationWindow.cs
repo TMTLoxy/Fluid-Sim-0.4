@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Numerics;
@@ -43,11 +44,14 @@ namespace Fluid_Sim_0._4
         private float vol;
         public SimulationWindow(Form mainMenu, 
             int particleCount, float smoothingRad, 
-            int gridSquareXCount, int gridSquareYCount)
+            int gridSquareXCount, int gridSquareYCount, 
+            int interval)
         {
             InitializeComponent();
 
             // sim initialization
+            setClockInterval(interval);
+
             vol = getVol(smoothingRad); // need to assign smoothingRad
 
             this.particleCount = particleCount; // can be made to be adjustable later
@@ -70,7 +74,7 @@ namespace Fluid_Sim_0._4
             // ioIndicator : true => outside the simulation is greater than the borderVal
             // currently no linked walls can add later once program is working (used mainly in wind tunnel)
 
-            timeInterval = 1f / this.SimulationClock.Interval; // seconds per tick
+            timeInterval = this.SimulationClock.Interval / 1000f; // seconds per tick
 
             // graphics initialization
             this.mainMenu = mainMenu;
@@ -97,6 +101,9 @@ namespace Fluid_Sim_0._4
             // - graphics refresh
             for (int i = 0; i < particleCount; i++)
             {
+                //Debug.WriteLine("PrevPos: " + particles[i].getPrevPos().X + ", " + particles[i].getPrevPos().Y); // DT
+                //Debug.WriteLine("Pos: " + particles[i].getPos().X + ", " + particles[i].getPos().Y); // DT
+
                 // Collision algorithm
                 // check ,for each particle, against the contents of it's grid square and it's adjacent squares
                 // get current particle's square
@@ -200,12 +207,23 @@ namespace Fluid_Sim_0._4
             }
         }
 
+        private void setClockInterval(int interval)
+        {
+            SimulationClock.Interval = interval;
+        }
+
 
         // GUI stuff
         private void EndSim_btn_Click(object sender, EventArgs e)
         {
             mainMenu.Show();
             this.Close();
+        }
+
+        private void PauseSim_btn_Click(object sender, EventArgs e)
+        {
+            if (SimulationClock.Enabled) SimulationClock.Enabled = false;
+            else SimulationClock.Enabled = true;
         }
     }
 }

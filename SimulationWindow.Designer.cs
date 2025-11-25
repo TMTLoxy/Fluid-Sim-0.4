@@ -31,11 +31,13 @@
             this.components = new System.ComponentModel.Container();
             this.SimulationClock = new System.Windows.Forms.Timer(this.components);
             this.EndSim_btn = new System.Windows.Forms.Button();
+            this.PauseSim_btn = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // SimulationClock
             // 
             this.SimulationClock.Enabled = true;
+            this.SimulationClock.Interval = 1;
             this.SimulationClock.Tick += new System.EventHandler(this.SimulationClock_Tick);
             // 
             // EndSim_btn
@@ -48,11 +50,22 @@
             this.EndSim_btn.UseVisualStyleBackColor = true;
             this.EndSim_btn.Click += new System.EventHandler(this.EndSim_btn_Click);
             // 
+            // PauseSim_btn
+            // 
+            this.PauseSim_btn.Location = new System.Drawing.Point(713, 41);
+            this.PauseSim_btn.Name = "PauseSim_btn";
+            this.PauseSim_btn.Size = new System.Drawing.Size(75, 23);
+            this.PauseSim_btn.TabIndex = 1;
+            this.PauseSim_btn.Text = "Pause";
+            this.PauseSim_btn.UseVisualStyleBackColor = true;
+            this.PauseSim_btn.Click += new System.EventHandler(this.PauseSim_btn_Click);
+            // 
             // SimulationWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
+            this.Controls.Add(this.PauseSim_btn);
             this.Controls.Add(this.EndSim_btn);
             this.Name = "SimulationWindow";
             this.Text = "SimulationWindow";
@@ -64,5 +77,6 @@
 
         private System.Windows.Forms.Timer SimulationClock;
         private System.Windows.Forms.Button EndSim_btn;
+        private System.Windows.Forms.Button PauseSim_btn;
     }
 }
