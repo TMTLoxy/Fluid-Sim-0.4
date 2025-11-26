@@ -17,7 +17,7 @@ namespace Fluid_Sim_0._4
         private float smoothingRad = 2;
         private int gridSquareXCount = 5;
         private int gridSquareYCount = 5;
-        private int msPerTick = 1000;
+        private int msPerTick = 1;
 
         public MainMenu()
         {

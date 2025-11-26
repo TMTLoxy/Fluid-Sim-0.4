@@ -30,6 +30,7 @@ namespace Fluid_Sim_0._4
         public Particle(Vector2 initPos)
         {
             pos = initPos;
+            vel = new Vector2(500, 0); // DT testing
         }
 
         public void ParticleCollision(Particle particle)
