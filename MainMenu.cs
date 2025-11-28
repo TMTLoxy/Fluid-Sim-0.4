@@ -13,7 +13,7 @@ namespace Fluid_Sim_0._4
     public partial class MainMenu : Form
     {
         // all of the sim stuff, will be fetched from menu screen later currently just initializing here
-        private int particleCount = 100;
+        private int particleCount = 1000;
         private float smoothingRad = 2;
         private int gridSquareXCount = 5;
         private int gridSquareYCount = 5;

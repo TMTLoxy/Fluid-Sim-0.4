@@ -56,7 +56,7 @@ namespace Fluid_Sim_0._4
 
             this.particleCount = particleCount; // can be made to be adjustable later
             particles = new List<Particle>();
-            Vector2 initPos = new Vector2(this.Width / 2, this.Height / 2);
+            Vector2 initPos = new Vector2(500 / 2,500/ 2);
             for (int i = 0; i < particleCount; i++)
             {
                 particles.Add(new Particle(initPos));
@@ -67,10 +67,10 @@ namespace Fluid_Sim_0._4
 
             // set walls
             walls = new List<Wall>();
-            walls.Add(new VerticleWall(0, false, null));              // left
-            walls.Add(new VerticleWall(this.Width, true, null));      // right
-            walls.Add(new HorizontalWall(0, false, null));            // top
-            walls.Add(new HorizontalWall(this.Height, true, null));   // bottom
+            walls.Add(new VerticleWall(10, false, null));              // left
+            walls.Add(new VerticleWall(this.Width - 10, true, null));      // right
+            walls.Add(new HorizontalWall(10, false, null));            // top
+            walls.Add(new HorizontalWall(this.Height - 10, true, null));   // bottom
             // ioIndicator : true => outside the simulation is greater than the borderVal
             // currently no linked walls can add later once program is working (used mainly in wind tunnel)
 
@@ -121,7 +121,8 @@ namespace Fluid_Sim_0._4
                     }
                 }
                 // Wall Collisions
-                particles[i].wallCollisions(walls);
+                if(frameCount != 0 )
+                   particles[i].wallCollisions(walls);
 
                 particles[i].Update(timeInterval, g, gridSquareWidth, gridSquareHeight);
                 // update all the grid squares to have new particles in

@@ -46,6 +46,7 @@ namespace Fluid_Sim_0._4
 
         public override void wallCollision(Particle incParticle)
         {
+            Debug.WriteLine(incParticle.getPrevPos());
             incParticle.setPos(incParticle.getPrevPos());
             incParticle.setVel(new Vector2(-incParticle.getVel().X, incParticle.getVel().Y));
         }
@@ -54,7 +55,7 @@ namespace Fluid_Sim_0._4
             float prevPos = incParticle.getPrevPos().X;
             float pos = incParticle.getPos().X;
             if (prevPos < borderVal & pos >= borderVal & !ioIndicator) return true;
-            else if (prevPos >= borderVal & pos < borderVal & ioIndicator) return true;
+            else if (prevPos >= borderVal & pos < borderVal) return true;
             return false;
         }
         public override void linkedWallCollision(Particle incParticle)

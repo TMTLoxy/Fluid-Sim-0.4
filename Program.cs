@@ -17,14 +17,12 @@ namespace Fluid_Sim_0._4
         // TO-DO
         // -movement calculations for particles, get them moving around
         // -wall class where you can turn them on/ off & link them etc (simple object collisions as they straight lines)
-        //   -do the walls with inheritance and stuff, get good way of checking for collisions
         // -try getting a shape on screen
         // -get grid squares working, initialize them, get them being assigned correctly (mainly get sim running)
         // -particle collision method
 
         // Current Notes
-        // -need to change wall collisions to set particle position to edge of wall after changing velocity
-        // -try to fix the wierd bunching issue
+        // -
         static void Main()
         {
             Application.EnableVisualStyles();
