@@ -15,6 +15,7 @@ namespace Fluid_Sim_0._4
         // this version (0.4) is entirely new and has been completely rewritten since the last code check (version 0.3)
 
         // TO-DO
+        // -convert all the for loops to Parallel.For where possible 
         // -movement calculations for particles, get them moving around
         // -wall class where you can turn them on/ off & link them etc (simple object collisions as they straight lines)
         // -try getting a shape on screen
@@ -22,7 +23,8 @@ namespace Fluid_Sim_0._4
         // -particle collision method
 
         // Current Notes
-        // -
+        // -grid system is broken, nearby particle is returning an empty list / list with no items
+        // -redo al the grid stuff probably with that nvidia paper
         static void Main()
         {
             Application.EnableVisualStyles();

@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
 using System.Drawing;
+using System.Drawing.Design;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
@@ -24,7 +25,7 @@ namespace Fluid_Sim_0._4
         private int windX;
         private int windY;
 
-            // dev particle drawing things
+        // dev particle drawing things
         private Brush[] colours = { Brushes.Red, Brushes.Orange, Brushes.Yellow, Brushes.Green, Brushes.Blue, Brushes.Purple };
         private float rad = 5f;
         private int frameCount = 0;
@@ -42,41 +43,47 @@ namespace Fluid_Sim_0._4
         private float timeInterval;
         private float g = 9.81f;
         private float vol;
-        public SimulationWindow(Form mainMenu, 
-            int particleCount, float smoothingRad, 
-            int gridSquareXCount, int gridSquareYCount, 
-            int interval)
+        private float targetDensity;
+        private float pressureMultiplier;
+        public SimulationWindow(Form mainMenu,
+            int particleCount, float smoothingRad,
+            int gridSquareXCount, int gridSquareYCount,
+            int interval, float targetDensity, float pressureMultiplier, float gravity)
         {
+            // INITIALIZATION
+            # region particles
             InitializeComponent();
+            this.smoothingRad = smoothingRad;
+            this.particleCount = particleCount;
 
-            // sim initialization
-            setClockInterval(interval);
-
-            vol = getVol(smoothingRad); // need to assign smoothingRad
-
-            this.particleCount = particleCount; // can be made to be adjustable later
             particles = new List<Particle>();
-            Vector2 initPos = new Vector2(500 / 2,500/ 2);
+            Vector2 initPos = new Vector2(500 / 2, 500 / 2);
             for (int i = 0; i < particleCount; i++)
             {
                 particles.Add(new Particle(initPos));
-                initPos += new Vector2(1f, 1f); 
+                initPos += new Vector2(1f, 1f);
             }
-
-            simGridSetup(gridSquareXCount, gridSquareYCount);
-
-            // set walls
+            #endregion
+            #region walls
             walls = new List<Wall>();
-            walls.Add(new VerticleWall(10, false, null));              // left
+            walls.Add(new VerticleWall(10, false, null));                  // left
             walls.Add(new VerticleWall(this.Width - 10, true, null));      // right
-            walls.Add(new HorizontalWall(10, false, null));            // top
+            walls.Add(new HorizontalWall(10, false, null));                // top
             walls.Add(new HorizontalWall(this.Height - 10, true, null));   // bottom
             // ioIndicator : true => outside the simulation is greater than the borderVal
             // currently no linked walls can add later once program is working (used mainly in wind tunnel)
+            simGridSetup(gridSquareXCount, gridSquareYCount);
+            #endregion
+            #region sim parameters
+            this.targetDensity = targetDensity;
+            this.pressureMultiplier = pressureMultiplier;
+            g = gravity;
+            setClockInterval(interval);
 
             timeInterval = this.SimulationClock.Interval / 1000f; // seconds per tick
-
-            // graphics initialization
+            vol = getVol(smoothingRad);
+            #endregion
+            #region graphics initialization
             this.mainMenu = mainMenu;
 
             this.Paint += new PaintEventHandler(PaintParticles);
@@ -88,67 +95,40 @@ namespace Fluid_Sim_0._4
 
             windX = this.Width; // can be adjusted to fit in buttons or whatever
             windY = this.Height;
+            #endregion
             // dev tools
-
         }
 
-        private void SimulationClock_Tick(object sender, EventArgs e)
+        public void SimulationClock_Tick(object sender, EventArgs e)
         {
             frameCount++;
-
-            // - Object collision check
-            // - Particle collision stuff
-            // - graphics refresh
             for (int i = 0; i < particleCount; i++)
             {
-                //Debug.WriteLine("PrevPos: " + particles[i].getPrevPos().X + ", " + particles[i].getPrevPos().Y); // DT
-                //Debug.WriteLine("Pos: " + particles[i].getPos().X + ", " + particles[i].getPos().Y); // DT
+                Debug.WriteLine(particles[0].getPos());
+                Debug.WriteLine(particles[0].getVel());
+                Debug.WriteLine("----");
 
-                // Collision algorithm
-                // check ,for each particle, against the contents of it's grid square and it's adjacent squares
-                // get current particle's square
-                // for squares of index i, +- 1 create a list of particles in all those squares
-                // run collision checks against all object edges in that square and adjacent 
-                // run collision checks for all of those particles
+                // update predicted positions & apply gravity
+                particles[i].predictPositions(g, timeInterval);
+                // update grid
+                particles[i].findGridSquare(gridSquareWidth, gridSquareHeight); // runs off particle's predicted position
+                // particle calculations
+                List<Particle> nearbyParticles = getNearbyParticles(particles[i].getPredictedPos());
+                particles[i].calculateDensity(vol, smoothingRad, nearbyParticles);
 
-                // Particle Collisions
-                List<Particle> nearbyParticles = getNearbyParticles(particles[i].getPos());
-                for (int p = 0; p < nearbyParticles.Count; p++)
-                {
-                    if (nearbyParticles[p] != particles[i])
-                    {
-                        particles[i].particleCollisionCheck(nearbyParticles[p]);
-                    }
-                }
+                Vector2 pressureForce = calculatePressureGradient(particles[i].getPredictedPos(), nearbyParticles);
+                particles[i].applyPressureForce(pressureForce, timeInterval);
+
+                particles[i].updatePosition(timeInterval);
                 // Wall Collisions
-                if(frameCount != 0 )
-                   particles[i].wallCollisions(walls);
+                if (frameCount != 0)
+                    particles[i].wallCollisions(walls);
 
-                particles[i].Update(timeInterval, g, gridSquareWidth, gridSquareHeight);
                 // update all the grid squares to have new particles in
             }
 
-            refreshDensities();
-
             // draw next frame
             this.Refresh();
-        }
-
-        public void refreshDensities()
-        {
-            // for each pixel in the display, run getDensity to get the density at that point
-        }
-
-        public float getDensity(Vector2 d)
-        {
-            List<Particle> nearbyParticles = getNearbyParticles(d);
-            float density = 0f;
-            for (int i = 0; i < nearbyParticles.Count; i++)
-            {
-                float influence = 1 / nearbyParticles[i].getInfluence(d);
-                density += influence * nearbyParticles[i].getMass();
-            }
-            return density / vol;
         }
 
         public float getVol(float s)
@@ -188,10 +168,44 @@ namespace Fluid_Sim_0._4
             }
         }
 
+        public float smoothingKernalDerivative(float dist, float smoothingRad)
+        {
+            if (dist >= smoothingRad) return 0f;
+            float coeff = dist / smoothingRad;
+            float gradient = (2 * coeff - 2) / smoothingRad;
+            return gradient;
+        }
+
+        public Vector2 calculatePressureGradient(Vector2 d, List<Particle> nearbyParticles)
+        {
+            Vector2 pressureGrad = Vector2.Zero;
+            for (int i = 0; i < nearbyParticles.Count; i++)
+            {
+                if (d == particles[i].getPredictedPos()) continue; // skip if self (this will also continue if two particles in same position but oh well)
+                Vector2 predPos = nearbyParticles[i].getPredictedPos();
+                float dist = Vector2.Distance(d, predPos);
+                Vector2 dir = predPos - d / dist;
+                Debug.WriteLine("DistanceBelow");
+                Debug.WriteLine(dist);
+
+                float slope = smoothingKernalDerivative(dist, smoothingRad);
+                float mass = nearbyParticles[i].getMass();
+                float density = nearbyParticles[i].getDensity();
+                pressureGrad += densityToPressure(density) * slope * dir * mass / density; // currently used for just pressure calcs but can be adapted for all properties
+            }
+            Debug.WriteLine(pressureGrad);
+            return pressureGrad;
+        }
+        public float densityToPressure(float density)
+        {
+            float densityDif = density - targetDensity;
+            float pressure = densityDif * pressureMultiplier;
+            return pressure;
+        }
 
         // GRAPHICS
 
-            // dev particle drawing
+        // dev particle drawing
         private void PaintParticles(object sender, PaintEventArgs e)
         {
             // graphics settings

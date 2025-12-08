@@ -7,6 +7,7 @@ using System.Numerics;
 using System.Security.Cryptography.X509Certificates;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Threading;
 
 namespace Fluid_Sim_0._4
 {
@@ -16,10 +17,16 @@ namespace Fluid_Sim_0._4
     {
         private Vector2 pos;
         private Vector2 prevPos;
+        private Vector2 predictedPos;
         private Vector2 vel;
         private float mass;
         private float influenceRad;
         private Vector2 currentSquare;
+
+        // only density being used rn, use properties array later
+        private float density;
+        // private float[] properties = new float[density, pressure];
+        // example of properties arry to hold the different bits for each particle ie the density and pressure at its location
 
         private int gridXCount;
         private int gridYCount;
@@ -31,23 +38,43 @@ namespace Fluid_Sim_0._4
         {
             pos = initPos;
             prevPos = pos;
-
-        vel = new Vector2(-500, 0); // DT testing
+            predictedPos = pos;
+            mass = 1;
+            density = 1;
         }
 
-        public void ParticleCollision(Particle particle)
+        public void applyPressureForce(Vector2 pressureForce, float timeInterval)
         {
-            // swap velocities for fully elastic collisions, think of it later
+            Vector2 accel = pressureForce / density;
+            vel += accel * timeInterval;
         }
 
-        public void particleCollisionCheck(Particle particle)
+        public void updatePosition(float timeInterval)
         {
-            float dist = Vector2.Distance(pos, particle.pos);
-            if (dist <= influenceRad + particle.influenceRad)
+            pos += vel * timeInterval;
+        }
+        
+        public void calculateDensity(float vol, float smoothingRad, List<Particle> nearbyParticles)
+        {
+            float density = 0f;
+            for (int i = 0; i < nearbyParticles.Count; i++)
             {
-                ParticleCollision(particle);
+                float dist = Vector2.Distance(predictedPos, nearbyParticles[i].getPredictedPos());
+                float influence = smoothingKernal(dist, smoothingRad);
+                float mass = nearbyParticles[i].getMass();
+                density += influence * mass; // replace density with an index of particle/properties to use fumction for stuff other than density
             }
+            this.density = density / vol; 
         }
+
+        public float smoothingKernal(float dist, float smoothingRad)
+        {
+            if (dist >= smoothingRad) return 0f;
+            float coeff = dist / smoothingRad;
+            float influence = coeff * coeff - 2 * coeff + 1;
+            return influence; // if doesn't work try returning influence * smoothingRad
+        }
+
         public void ObjectBoundaryCollisionCheck(List<SDF_BezierShape> objects)
         {
             // for each object check distance to that obejct, if dist > mincheck then dont check
@@ -89,31 +116,16 @@ namespace Fluid_Sim_0._4
             }
         }
 
-        public float getInfluence(Vector2 d)
+        public void predictPositions(float g, float timeInterval)
         {
-            float dist = Vector2.Distance(pos, d);
-            if (dist > influenceRad) return 0;
-            else
-            {
-                float nDist = 1 / dist;
-                float inf = (nDist - 1) * (nDist - 1);
-                return inf;
-            }
+            vel.Y += g * timeInterval;
+            predictedPos = pos + vel * timeInterval;
         }
-
-        public void Update(float timeInterval, float g, float gridSquareWidth, float gridSquareHeight)
+        
+        public void findGridSquare(float gridSquareWidth, float gridSquareHeight)
         {
-            prevPos = pos;
-            // do all movement and stuff
-            vel.Y += g;
-            pos = prevPos + (vel * timeInterval);
-            findGridSquare(gridSquareWidth, gridSquareHeight);
-        }
-
-        private void findGridSquare(float gridSquareWidth, float gridSquareHeight)
-        {
-            int gridX = (int)(pos.X / gridSquareWidth);
-            int gridY = (int)(pos.Y / gridSquareHeight);
+            int gridX = (int)(predictedPos.X / gridSquareWidth);
+            int gridY = (int)(predictedPos.Y / gridSquareHeight);
             currentSquare = new Vector2(gridX, gridY);
         }
 
@@ -124,6 +136,8 @@ namespace Fluid_Sim_0._4
         public float getMass() => mass;
         public Vector2 getPos() => pos;
         public Vector2 getPrevPos() => prevPos;
+        public Vector2 getPredictedPos() => predictedPos;
         public Vector2 getVel() => vel;
+        public float getDensity() => density;
     }
 }
