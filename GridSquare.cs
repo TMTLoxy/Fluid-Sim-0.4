@@ -11,15 +11,14 @@ namespace Fluid_Sim_0._4
     {
         private List<Particle> particles;
         private List<SDFObject> objectWalls;
-        private Vector2 index;
         private float width;
-        private float height;
 
-        public GridSquare(Vector2 index, float width, float height)
+        public GridSquare(float width)
         {
             // go through all the objects and see which ones have bits in the square
             //   use their segment points
             particles = new List<Particle>();
+            this.width = width;
         }
 
         // each frame update particles list to contain particles that are in this square
@@ -33,6 +32,5 @@ namespace Fluid_Sim_0._4
         {
             return particles;
         }
-        public Vector2 getIndex() => index;
     }
 }

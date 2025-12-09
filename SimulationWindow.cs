@@ -18,72 +18,43 @@ namespace Fluid_Sim_0._4
     // TO-DO list in Program.cs
     public partial class SimulationWindow : Form
     {
-        // graphics stuff
+        #region Graphics & Menus
         private Form mainMenu;
 
         private float[,] densities;
         private int windX;
         private int windY;
-
-        // dev particle drawing things
+        #endregion
+        #region Partilcle Drawing (dev)
         private Brush[] colours = { Brushes.Red, Brushes.Orange, Brushes.Yellow, Brushes.Green, Brushes.Blue, Brushes.Purple };
         private float rad = 5f;
         private int frameCount = 0;
-
-        // sim stuff
+        #endregion
+        #region Particles
         private List<Particle> particles;
         private int particleCount;
         private float smoothingRad;
-
-        private GridSquare[,] gridSquares;
+        #endregion
+        #region Grid & Walls
         private float gridSquareWidth;
-        private float gridSquareHeight;
+        private GridSquare[,] gridSquares;
         private List<Wall> walls;
-
+        #endregion
+        #region Sim Parameters
         private float timeInterval;
         private float g = 9.81f;
         private float vol;
         private float targetDensity;
         private float pressureMultiplier;
+        #endregion
         public SimulationWindow(Form mainMenu,
             int particleCount, float smoothingRad,
             int gridSquareXCount, int gridSquareYCount,
             int interval, float targetDensity, float pressureMultiplier, float gravity)
         {
             // INITIALIZATION
-            # region particles
-            InitializeComponent();
-            this.smoothingRad = smoothingRad;
-            this.particleCount = particleCount;
-
-            particles = new List<Particle>();
-            Vector2 initPos = new Vector2(500 / 2, 500 / 2);
-            for (int i = 0; i < particleCount; i++)
-            {
-                particles.Add(new Particle(initPos));
-                initPos += new Vector2(1f, 1f);
-            }
-            #endregion
-            #region walls
-            walls = new List<Wall>();
-            walls.Add(new VerticleWall(10, false, null));                  // left
-            walls.Add(new VerticleWall(this.Width - 10, true, null));      // right
-            walls.Add(new HorizontalWall(10, false, null));                // top
-            walls.Add(new HorizontalWall(this.Height - 10, true, null));   // bottom
-            // ioIndicator : true => outside the simulation is greater than the borderVal
-            // currently no linked walls can add later once program is working (used mainly in wind tunnel)
-            simGridSetup(gridSquareXCount, gridSquareYCount);
-            #endregion
-            #region sim parameters
-            this.targetDensity = targetDensity;
-            this.pressureMultiplier = pressureMultiplier;
-            g = gravity;
-            setClockInterval(interval);
-
-            timeInterval = this.SimulationClock.Interval / 1000f; // seconds per tick
-            vol = getVol(smoothingRad);
-            #endregion
             #region graphics initialization
+            InitializeComponent();
             this.mainMenu = mainMenu;
 
             this.Paint += new PaintEventHandler(PaintParticles);
@@ -96,22 +67,55 @@ namespace Fluid_Sim_0._4
             windX = this.Width; // can be adjusted to fit in buttons or whatever
             windY = this.Height;
             #endregion
+            #region sim parameters
+            this.targetDensity = targetDensity;
+            this.pressureMultiplier = pressureMultiplier;
+            g = gravity;
+            setClockInterval(interval);
+
+            timeInterval = this.SimulationClock.Interval / 1000f; // seconds per tick
+            vol = getVol(smoothingRad);
+            #endregion
+            # region particles
+            this.smoothingRad = smoothingRad;
+            this.particleCount = particleCount;
+
+            particles = new List<Particle>();
+            Vector2 initPos = new Vector2(500 / 2, 500 / 2);
+            for (int i = 0; i < particleCount; i++)
+            {
+                particles.Add(new Particle(initPos));
+                initPos += new Vector2(1f, 1f);
+            }
+            #endregion
+            #region Grid & Walls
+            walls = new List<Wall>();
+            walls.Add(new VerticleWall(10, false, null));                  // left
+            walls.Add(new VerticleWall(this.Width - 10, true, null));      // right
+            walls.Add(new HorizontalWall(10, false, null));                // top
+            walls.Add(new HorizontalWall(this.Height - 10, true, null));   // bottom
+            // ioIndicator : true => outside the simulation is greater than the borderVal
+            // currently no linked walls can add later once program is working (used mainly in wind tunnel)
+            gridSquareWidth = smoothingRad * 20;
+            simGridSetup(gridSquareXCount, gridSquareYCount);
+            #endregion
+            
             // dev tools
         }
 
         public void SimulationClock_Tick(object sender, EventArgs e)
         {
             frameCount++;
+            Debug.WriteLine("Pos: " + Convert.ToString(particles[0].getPos()));
+            Debug.WriteLine("Vel: " + Convert.ToString(particles[0].getVel()));
+            Debug.WriteLine("GridSquare: " + Convert.ToString(particles[0].getGridSquare()));
+            Debug.WriteLine("----");
             for (int i = 0; i < particleCount; i++)
             {
-                Debug.WriteLine(particles[0].getPos());
-                Debug.WriteLine(particles[0].getVel());
-                Debug.WriteLine("----");
-
                 // update predicted positions & apply gravity
                 particles[i].predictPositions(g, timeInterval);
                 // update grid
-                particles[i].findGridSquare(gridSquareWidth, gridSquareHeight); // runs off particle's predicted position
+                particles[i].findGridSquare(gridSquareWidth); // runs off particle's predicted position
                 // particle calculations
                 List<Particle> nearbyParticles = getNearbyParticles(particles[i].getPredictedPos());
                 particles[i].calculateDensity(vol, smoothingRad, nearbyParticles);
@@ -156,14 +160,16 @@ namespace Fluid_Sim_0._4
 
         public void simGridSetup(int gridSquareXCount, int gridSquareYCount)
         {
-            gridSquareWidth = this.Width / gridSquareXCount;
-            gridSquareHeight = this.Height / gridSquareYCount;
-            gridSquares = new GridSquare[gridSquareXCount, gridSquareYCount];
-            for (int i = 0; i < gridSquareXCount; i++)
+            Debug.WriteLine(windX);
+            Debug.WriteLine(windY);
+            int gridCountX = (int)(windX / (gridSquareWidth)) + 1;
+            int gridCountY = (int)(windY / (gridSquareWidth)) + 1;
+            gridSquares = new GridSquare[gridCountX, gridCountY];
+            for (int i = 0; i < gridCountX; i++)
             {
-                for (int j = 0; j < gridSquareYCount; j++)
+                for (int j = 0; j < gridCountY; j++)
                 {
-                    gridSquares[i, j] = new GridSquare(new Vector2(i, j), gridSquareWidth, gridSquareHeight);
+                    gridSquares[i, j] = new GridSquare(gridSquareWidth);
                 }
             }
         }

@@ -33,7 +33,6 @@ namespace Fluid_Sim_0._4
         private int windX;
         private int windY;
 
-
         public Particle(Vector2 initPos)
         {
             pos = initPos;
@@ -122,10 +121,10 @@ namespace Fluid_Sim_0._4
             predictedPos = pos + vel * timeInterval;
         }
         
-        public void findGridSquare(float gridSquareWidth, float gridSquareHeight)
+        public void findGridSquare(float gridSquareWidth)
         {
             int gridX = (int)(predictedPos.X / gridSquareWidth);
-            int gridY = (int)(predictedPos.Y / gridSquareHeight);
+            int gridY = (int)(predictedPos.Y / gridSquareWidth);
             currentSquare = new Vector2(gridX, gridY);
         }
 
