@@ -58,6 +58,7 @@ namespace Fluid_Sim_0._4
             float density = 0f;
             for (int i = 0; i < nearbyParticles.Count; i++)
             {
+                if (nearbyParticles[i].getPos() == pos) continue;
                 float dist = Vector2.Distance(predictedPos, nearbyParticles[i].getPredictedPos());
                 float influence = smoothingKernal(dist, smoothingRad);
                 float mass = nearbyParticles[i].getMass();
@@ -121,11 +122,12 @@ namespace Fluid_Sim_0._4
             predictedPos = pos + vel * timeInterval;
         }
         
-        public void findGridSquare(float gridSquareWidth)
+        public Vector2 findGridSquare(float gridSquareWidth)
         {
             int gridX = (int)(predictedPos.X / gridSquareWidth);
             int gridY = (int)(predictedPos.Y / gridSquareWidth);
             currentSquare = new Vector2(gridX, gridY);
+            return currentSquare;
         }
 
         public void setVel(Vector2 newVel) => vel = newVel; 

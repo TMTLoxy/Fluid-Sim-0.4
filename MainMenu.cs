@@ -14,7 +14,7 @@ namespace Fluid_Sim_0._4
     {
         // all of the sim stuff, will be fetched from menu screen later currently just initializing here
         private int particleCount = 10;
-        private float smoothingRad = 2;
+        private float smoothingRad = 30;
 
         private int gridSquareXCount = 5;
         private int gridSquareYCount = 5;
@@ -32,7 +32,6 @@ namespace Fluid_Sim_0._4
         private void StartSimulation_btn_Click(object sender, EventArgs e)
         {
             Form SimWindow = new SimulationWindow(this, particleCount, smoothingRad,
-                                                    gridSquareXCount, gridSquareYCount, 
                                                     msPerTick, targetDensity, pressureMultiplier, gravity);
             this.Hide();
             SimWindow.Show();

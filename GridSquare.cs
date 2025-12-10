@@ -23,10 +23,11 @@ namespace Fluid_Sim_0._4
 
         // each frame update particles list to contain particles that are in this square
 
-        public void updateParticles(List<Particle> particles)
+        public void addParticle(Particle particle)
         {
-            this.particles = particles;
+            particles.Add(particle);
         }
+
 
         public List<Particle> getParticles()
         {

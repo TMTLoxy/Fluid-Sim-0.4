@@ -38,6 +38,7 @@ namespace Fluid_Sim_0._4
         #region Grid & Walls
         private float gridSquareWidth;
         private GridSquare[,] gridSquares;
+        Vector2 gridSquareIndexMax;
         private List<Wall> walls;
         #endregion
         #region Sim Parameters
@@ -49,7 +50,6 @@ namespace Fluid_Sim_0._4
         #endregion
         public SimulationWindow(Form mainMenu,
             int particleCount, float smoothingRad,
-            int gridSquareXCount, int gridSquareYCount,
             int interval, float targetDensity, float pressureMultiplier, float gravity)
         {
             // INITIALIZATION
@@ -85,7 +85,7 @@ namespace Fluid_Sim_0._4
             for (int i = 0; i < particleCount; i++)
             {
                 particles.Add(new Particle(initPos));
-                initPos += new Vector2(1f, 1f);
+                initPos += new Vector2(10f, 10f);
             }
             #endregion
             #region Grid & Walls
@@ -97,7 +97,7 @@ namespace Fluid_Sim_0._4
             // ioIndicator : true => outside the simulation is greater than the borderVal
             // currently no linked walls can add later once program is working (used mainly in wind tunnel)
             gridSquareWidth = smoothingRad * 20;
-            simGridSetup(gridSquareXCount, gridSquareYCount);
+            gridSquareIndexMax = simGridSetup();
             #endregion
             
             // dev tools
@@ -106,19 +106,30 @@ namespace Fluid_Sim_0._4
         public void SimulationClock_Tick(object sender, EventArgs e)
         {
             frameCount++;
-            Debug.WriteLine("Pos: " + Convert.ToString(particles[0].getPos()));
-            Debug.WriteLine("Vel: " + Convert.ToString(particles[0].getVel()));
-            Debug.WriteLine("GridSquare: " + Convert.ToString(particles[0].getGridSquare()));
-            Debug.WriteLine("----");
             for (int i = 0; i < particleCount; i++)
             {
+                Debug.WriteLine("Pos: " + Convert.ToString(particles[i].getPos()));
+                Debug.WriteLine("Vel: " + Convert.ToString(particles[i].getVel()));
+
                 // update predicted positions & apply gravity
-                particles[i].predictPositions(g, timeInterval);
+                    particles[i].predictPositions(g, timeInterval);
+                Debug.WriteLine("Predicted Pos: " + Convert.ToString(particles[i].getPredictedPos()));
+
                 // update grid
-                particles[i].findGridSquare(gridSquareWidth); // runs off particle's predicted position
+                Vector2 gridSquare = particles[i].findGridSquare(gridSquareWidth); // runs off particle's predicted position
+                Debug.WriteLine("GridSquare: " + Convert.ToString(particles[i].getGridSquare()));
+                gridSquares[(int)gridSquare.X, (int)gridSquare.Y].addParticle(particles[i]);
+                
+
                 // particle calculations
-                List<Particle> nearbyParticles = getNearbyParticles(particles[i].getPredictedPos());
+                List<Particle> nearbyParticles = getNearbyParticles(particles[i].getGridSquare());
                 particles[i].calculateDensity(vol, smoothingRad, nearbyParticles);
+                
+                Debug.WriteLine("Nearby Particles: ");
+                for (int j = 0; j < nearbyParticles.Count; j++)
+                {
+                    Debug.WriteLine(nearbyParticles[j].getPos());
+                }
 
                 Vector2 pressureForce = calculatePressureGradient(particles[i].getPredictedPos(), nearbyParticles);
                 particles[i].applyPressureForce(pressureForce, timeInterval);
@@ -128,8 +139,8 @@ namespace Fluid_Sim_0._4
                 if (frameCount != 0)
                     particles[i].wallCollisions(walls);
 
-                // update all the grid squares to have new particles in
             }
+            Debug.WriteLine("----");
 
             // draw next frame
             this.Refresh();
@@ -140,28 +151,28 @@ namespace Fluid_Sim_0._4
             return (float)((1f / 6f) * Math.PI * s * s * (3 * s * s - 8 * s + 6));
         }
 
-        public List<Particle> getNearbyParticles(Vector2 d)
+        public List<Particle> getNearbyParticles(Vector2 gridSquare)
         {
-            int gridX = (int)d.X / windX;
-            int gridY = (int)d.Y / windY;
-            Vector2 gridIndex = new Vector2(gridX, gridY);
+            int xMin = (int)gridSquare.X - 1;
+            int xMax = (int)gridSquare.X + 1;
+
+            int yMin = (int)gridSquare.Y - 1;
+            int yMax = (int)gridSquare.X + 1;
 
             List<Particle> nearbyParticles = new List<Particle>();
-            for (int i = (int)gridIndex.X - 1; i < gridIndex.X + 1; i++)
+            for (int i = xMin; i < xMax; i++)
             {
-                for (int j = (int)gridIndex.Y - 1; j < gridIndex.Y + 1; j++)
+                for (int j = yMin; j < yMax; j++)
                 {
-                    if (i < 0 || j < 0 || i >= gridSquares.GetLength(0) || j >= gridSquares.GetLength(1)) continue; 
+                    if (i < 0 || j < 0 || i > gridSquares.GetLength(0) || j > gridSquares.GetLength(1)) continue; 
                     nearbyParticles.AddRange(gridSquares[i, j].getParticles());
                 }
             }
             return nearbyParticles;
         }
 
-        public void simGridSetup(int gridSquareXCount, int gridSquareYCount)
+        public Vector2 simGridSetup()
         {
-            Debug.WriteLine(windX);
-            Debug.WriteLine(windY);
             int gridCountX = (int)(windX / (gridSquareWidth)) + 1;
             int gridCountY = (int)(windY / (gridSquareWidth)) + 1;
             gridSquares = new GridSquare[gridCountX, gridCountY];
@@ -172,6 +183,7 @@ namespace Fluid_Sim_0._4
                     gridSquares[i, j] = new GridSquare(gridSquareWidth);
                 }
             }
+            return new Vector2(gridCountX, gridCountY);
         }
 
         public float smoothingKernalDerivative(float dist, float smoothingRad)
@@ -187,20 +199,18 @@ namespace Fluid_Sim_0._4
             Vector2 pressureGrad = Vector2.Zero;
             for (int i = 0; i < nearbyParticles.Count; i++)
             {
-                if (d == particles[i].getPredictedPos()) continue; // skip if self (this will also continue if two particles in same position but oh well)
+                if (d == nearbyParticles[i].getPredictedPos()) continue; // skip if self (this will also continue if two particles in same position but oh well)
                 Vector2 predPos = nearbyParticles[i].getPredictedPos();
                 float dist = Vector2.Distance(d, predPos);
                 Vector2 dir = predPos - d / dist;
-                Debug.WriteLine("DistanceBelow");
-                Debug.WriteLine(dist);
 
                 float slope = smoothingKernalDerivative(dist, smoothingRad);
                 float mass = nearbyParticles[i].getMass();
                 float density = nearbyParticles[i].getDensity();
                 pressureGrad += densityToPressure(density) * slope * dir * mass / density; // currently used for just pressure calcs but can be adapted for all properties
             }
-            Debug.WriteLine(pressureGrad);
-            return pressureGrad;
+            
+            return -pressureGrad;
         }
         public float densityToPressure(float density)
         {
