@@ -23,8 +23,7 @@ namespace Fluid_Sim_0._4
         // -particle collision method
 
         // Current Notes
-        // -grid system is broken, nearby particle is returning an empty list / list with no items
-        // -redo al the grid stuff probably with that nvidia paper
+        // -grid index is currently getting messed up idk why
         static void Main()
         {
             Application.EnableVisualStyles();
