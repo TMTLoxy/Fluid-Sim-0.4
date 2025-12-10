@@ -12,18 +12,28 @@ namespace Fluid_Sim_0._4
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
-        // this version (0.4) is entirely new and has been completely rewritten since the last code check (version 0.3)
 
         // TO-DO
-        // -convert all the for loops to Parallel.For where possible 
-        // -movement calculations for particles, get them moving around
-        // -wall class where you can turn them on/ off & link them etc (simple object collisions as they straight lines)
-        // -try getting a shape on screen
-        // -get grid squares working, initialize them, get them being assigned correctly (mainly get sim running)
-        // -particle collision method
 
-        // Current Notes
-        // -grid index is currently getting messed up idk why
+        // Graphics
+        // - integrate bitmaps
+        // - switch over to using bitmap images instead of drawing particles (can be kept for dev stuff)
+
+        // Simulation
+        // - Fix the grid calculations for the particles to then get them moving correctly
+        // - Get any sort of bezier shape on screen
+        // - particle collisions with shapes (debug) ((gonna be a pain))
+        // - Linked walls and particles being moved to the other side correctly
+
+        // Optimization
+        // - convert all the for loops to Parallel.For where possible 
+
+        // GUI & Front End
+        // - Initial loading screen / main menu
+        // - Settings / setup screen before simulation
+
+        // Random Notes
+        // - grid index is currently getting messed up idk why
         static void Main()
         {
             Application.EnableVisualStyles();
