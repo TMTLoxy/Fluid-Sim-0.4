@@ -82,7 +82,7 @@ namespace Fluid_Sim_0._4
             float influence = coeff * coeff - 2 * coeff + 1;
             return influence; // if doesn't work try returning influence * smoothingRad
         }
-        public void predictPositions(float g, float timeInterval)
+        public void predictPosition(float g, float timeInterval)
         {
             vel.Y += g * timeInterval;
             predictedPos = pos + vel * timeInterval;
@@ -118,6 +118,7 @@ namespace Fluid_Sim_0._4
         }
         #endregion
         #region Grid handling
+        // combine these two into 1 idk what u are doing
         public Vector2 findGridSquare()
         {
             int gridX = (int)(predictedPos.X / gridSquareWidth);
@@ -127,9 +128,14 @@ namespace Fluid_Sim_0._4
         }
         public void setGridSquare()
         {
-            int gridX = (int)(predictedPos.X / gridSquareWidth);
-            int gridY = (int)(predictedPos.Y / gridSquareWidth);
+            int gridX = (int)(pos.X / gridSquareWidth);
+            int gridY = (int)(pos.Y / gridSquareWidth);
             currentSquare = new Vector2(gridX, gridY);
+        }
+
+        public void updateToGridSquare(GridSquare[,] gridSquares)
+        {
+            gridSquares[(int)currentSquare.X, (int)currentSquare.Y].addParticle(this);
         }
         #endregion
         #region Wall Interactions

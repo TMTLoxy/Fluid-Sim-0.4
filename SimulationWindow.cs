@@ -84,7 +84,7 @@ namespace Fluid_Sim_0._4
             walls.Add(new HorizontalWall(this.Height - 10, true, null));   // bottom
             // ioIndicator : true => outside the simulation is greater than the borderVal
             // currently no linked walls can add later once program is working (used mainly in wind tunnel)
-            gridSquareWidth = smoothingRad * 5;
+            gridSquareWidth = smoothingRad * 3;
             gridSquareIndexMax = simGridSetup();
             Debug.WriteLine("Grid Square Width: " + Convert.ToString(gridSquareWidth));
             #endregion
@@ -106,7 +106,7 @@ namespace Fluid_Sim_0._4
 
         public void SimulationClock_Tick(object sender, EventArgs e)
         {
-            
+            // update the grids 
             frameCount++;
             Debug.WriteLine("Frame Count: " + Convert.ToString(frameCount));
             for (int i = 0; i < particleCount; i++)
@@ -117,14 +117,18 @@ namespace Fluid_Sim_0._4
                 Debug.WriteLine("Vel: " + Convert.ToString(particles[i].getVel()));
 
                 // update predicted positions & apply gravity
-                    particles[i].predictPositions(g, timeInterval);
+                particles[i].predictPosition(g, timeInterval);
                 Debug.WriteLine("Predicted Pos: " + Convert.ToString(particles[i].getPredictedPos()));
+
+                // this is stupid but leave for now
+                //// update the grid cells with the predicted positions (for each cell fill it with particles that are inside it)
+                //particles[i].updateToGridSquare(gridSquares);
 
                 // update grid
                 Vector2 gridSquare = particles[i].findGridSquare(); // runs off particle's predicted position
                 Debug.WriteLine("GridSquare: " + Convert.ToString(particles[i].getGridSquare()));
                 gridSquares[(int)gridSquare.X, (int)gridSquare.Y].addParticle(particles[i]);
-                
+
 
                 // particle calculations
                 List<Particle> nearbyParticles = getNearbyParticles(particles[i].getGridSquare(), particles[i].getID());
@@ -164,14 +168,14 @@ namespace Fluid_Sim_0._4
             int xMax = (int)gridSquare.X + 1;
 
             int yMin = (int)gridSquare.Y - 1;
-            int yMax = (int)gridSquare.X + 1;
+            int yMax = (int)gridSquare.Y + 1;
 
             List<Particle> nearbyParticles = new List<Particle>();
             for (int i = xMin; i < xMax; i++)
             {
                 for (int j = yMin; j < yMax; j++)
                 {
-                    if (i < 0 || j < 0 || i > gridSquares.GetLength(0) || j > gridSquares.GetLength(1)) continue;
+                    if (i < 0 || j < 0 || i >= gridSquares.GetLength(0) || j >= gridSquares.GetLength(1)) continue;
                     nearbyParticles.AddRange(gridSquares[i, j].getParticles());
                 }
             }
@@ -213,7 +217,7 @@ namespace Fluid_Sim_0._4
                 if (d == nearbyParticles[i].getPredictedPos()) continue; // skip if self (this will also continue if two particles in same position but oh well)
                 Vector2 predPos = nearbyParticles[i].getPredictedPos();
                 float dist = Vector2.Distance(d, predPos);
-                Vector2 dir = predPos - d / dist;
+                Vector2 dir = (predPos - d) / dist;
 
                 float slope = smoothingKernalDerivative(dist, smoothingRad);
                 float mass = nearbyParticles[i].getMass();
