@@ -76,18 +76,6 @@ namespace Fluid_Sim_0._4
             timeInterval = this.SimulationClock.Interval / 1000f; // seconds per tick
             vol = getVol(smoothingRad);
             #endregion
-            # region particles
-            this.smoothingRad = smoothingRad;
-            this.particleCount = particleCount;
-
-            particles = new List<Particle>();
-            Vector2 initPos = new Vector2(500 / 2, 500 / 2);
-            for (int i = 0; i < particleCount; i++)
-            {
-                particles.Add(new Particle(initPos));
-                initPos += new Vector2(10f, 10f);
-            }
-            #endregion
             #region Grid & Walls
             walls = new List<Wall>();
             walls.Add(new VerticleWall(10, false, null));                  // left
@@ -96,19 +84,35 @@ namespace Fluid_Sim_0._4
             walls.Add(new HorizontalWall(this.Height - 10, true, null));   // bottom
             // ioIndicator : true => outside the simulation is greater than the borderVal
             // currently no linked walls can add later once program is working (used mainly in wind tunnel)
-            gridSquareWidth = smoothingRad * 20;
+            gridSquareWidth = smoothingRad * 5;
             gridSquareIndexMax = simGridSetup();
+            Debug.WriteLine("Grid Square Width: " + Convert.ToString(gridSquareWidth));
             #endregion
-            
+            # region particles
+            this.smoothingRad = smoothingRad;
+            this.particleCount = particleCount;
+
+            particles = new List<Particle>();
+            Vector2 initPos = new Vector2(500 / 2, 500 / 2);
+            for (int i = 0; i < particleCount; i++)
+            {
+                particles.Add(new Particle(initPos, gridSquareWidth, i));
+                initPos += new Vector2(10f, 10f);
+            }
+            #endregion
             // dev tools
         }
 
 
         public void SimulationClock_Tick(object sender, EventArgs e)
         {
+            
             frameCount++;
+            Debug.WriteLine("Frame Count: " + Convert.ToString(frameCount));
             for (int i = 0; i < particleCount; i++)
             {
+                Debug.WriteLine(" ");
+                Debug.WriteLine("Particle ID: " + Convert.ToString(particles[i].getID()));
                 Debug.WriteLine("Pos: " + Convert.ToString(particles[i].getPos()));
                 Debug.WriteLine("Vel: " + Convert.ToString(particles[i].getVel()));
 
@@ -117,22 +121,24 @@ namespace Fluid_Sim_0._4
                 Debug.WriteLine("Predicted Pos: " + Convert.ToString(particles[i].getPredictedPos()));
 
                 // update grid
-                Vector2 gridSquare = particles[i].findGridSquare(gridSquareWidth); // runs off particle's predicted position
+                Vector2 gridSquare = particles[i].findGridSquare(); // runs off particle's predicted position
                 Debug.WriteLine("GridSquare: " + Convert.ToString(particles[i].getGridSquare()));
                 gridSquares[(int)gridSquare.X, (int)gridSquare.Y].addParticle(particles[i]);
                 
 
                 // particle calculations
-                List<Particle> nearbyParticles = getNearbyParticles(particles[i].getGridSquare());
+                List<Particle> nearbyParticles = getNearbyParticles(particles[i].getGridSquare(), particles[i].getID());
                 particles[i].calculateDensity(vol, smoothingRad, nearbyParticles);
+                Debug.WriteLine("Density: " + Convert.ToString(particles[i].getDensity()));
                 
                 Debug.WriteLine("Nearby Particles: ");
                 for (int j = 0; j < nearbyParticles.Count; j++)
                 {
-                    Debug.WriteLine(nearbyParticles[j].getPos());
+                    Debug.WriteLine("ID: " + nearbyParticles[j].getID() + " Pos: " + nearbyParticles[j].getPos());
                 }
 
                 Vector2 pressureForce = calculatePressureGradient(particles[i].getPredictedPos(), nearbyParticles);
+                Debug.WriteLine("Pressure force: " + Convert.ToString(pressureForce));
                 particles[i].applyPressureForce(pressureForce, timeInterval);
 
                 particles[i].updatePosition(timeInterval);
@@ -152,7 +158,7 @@ namespace Fluid_Sim_0._4
             return (float)((1f / 6f) * Math.PI * s * s * (3 * s * s - 8 * s + 6));
         }
 
-        public List<Particle> getNearbyParticles(Vector2 gridSquare)
+        public List<Particle> getNearbyParticles(Vector2 gridSquare, int ID)
         {
             int xMin = (int)gridSquare.X - 1;
             int xMax = (int)gridSquare.X + 1;
@@ -165,9 +171,13 @@ namespace Fluid_Sim_0._4
             {
                 for (int j = yMin; j < yMax; j++)
                 {
-                    if (i < 0 || j < 0 || i > gridSquares.GetLength(0) || j > gridSquares.GetLength(1)) continue; 
+                    if (i < 0 || j < 0 || i > gridSquares.GetLength(0) || j > gridSquares.GetLength(1)) continue;
                     nearbyParticles.AddRange(gridSquares[i, j].getParticles());
                 }
+            }
+            for (int i = 0; i < nearbyParticles.Count; i++)
+            {
+                if (nearbyParticles[i].getID() == ID) nearbyParticles.RemoveAt(i);
             }
             return nearbyParticles;
         }

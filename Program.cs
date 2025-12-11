@@ -18,6 +18,7 @@ namespace Fluid_Sim_0._4
         // Graphics
         // - integrate bitmaps
         // - switch over to using bitmap images instead of drawing particles (can be kept for dev stuff)
+        // - seperate graphics clock to generate bitmaps less than 1000 times per second to stop my computer exploding
 
         // Simulation
         // - Fix the grid calculations for the particles to then get them moving correctly
