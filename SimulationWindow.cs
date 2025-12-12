@@ -117,46 +117,88 @@ public partial class SimulationWindow : Form
             frameCount++;
             clearGrid();
             Debug.WriteLine("Frame Count: " + Convert.ToString(frameCount));
+            //for (int i = 0; i < particleCount; i++)
+            //{
+            //    Debug.WriteLine(" ");
+            //    Debug.WriteLine("Particle ID: " + Convert.ToString(particles[i].getID()));
+            //    Debug.WriteLine("Pos: " + Convert.ToString(particles[i].getPos()));
+            //    Debug.WriteLine("Vel: " + Convert.ToString(particles[i].getVel()));
+
+            //    // update predicted positions & apply gravity
+            //    particles[i].predictPosition(g, timeInterval);
+            //    Debug.WriteLine("Predicted Pos: " + Convert.ToString(particles[i].getPredictedPos()));
+
+            //    // predict pos and update grid for all particles then do calculations for all particles
+
+            //    // update grid
+            //    Vector2 gridSquare = particles[i].findGridSquare(); // runs off particle's predicted position
+            //    Debug.WriteLine("GridSquare: " + Convert.ToString(particles[i].getGridSquare()));
+            //    gridSquares[(int)gridSquare.X, (int)gridSquare.Y].addParticle(particles[i]);
+
+            //    // particle calculations
+            //    List<Particle> nearbyParticles = getNearbyParticles(particles[i].getGridSquare(), particles[i].getID());
+            //    particles[i].calculateDensity(vol, smoothingRad, nearbyParticles);
+            //    Debug.WriteLine("Density: " + Convert.ToString(particles[i].getDensity()));
+
+            //Debug.WriteLine("Nearby Particles: ");
+            //for (int j = 0; j < nearbyParticles.Count; j++)
+            //{
+            //    Debug.WriteLine("ID: " + nearbyParticles[j].getID() + " Pos: " + nearbyParticles[j].getPos());
+            //}
+
+            //    Vector2 pressureForce = calculatePressureGradient(particles[i].getPredictedPos(), nearbyParticles);
+            //    Debug.WriteLine("Pressure force: " + Convert.ToString(pressureForce));
+            //    particles[i].applyPressureForce(pressureForce, timeInterval);
+
+            //    particles[i].updatePosition(timeInterval);
+            //    // Wall Collisions
+            //    if (frameCount != 0)
+            //        particles[i].wallCollisions(walls);
+
+            //    Debug.WriteLine("New Pos: " + Convert.ToString(particles[i].getPos()));
+            //}
+
             for (int i = 0; i < particleCount; i++)
             {
-                Debug.WriteLine(" ");
                 Debug.WriteLine("Particle ID: " + Convert.ToString(particles[i].getID()));
-                Debug.WriteLine("Pos: " + Convert.ToString(particles[i].getPos()));
-                Debug.WriteLine("Vel: " + Convert.ToString(particles[i].getVel()));
-
-                // update predicted positions & apply gravity
                 particles[i].predictPosition(g, timeInterval);
                 Debug.WriteLine("Predicted Pos: " + Convert.ToString(particles[i].getPredictedPos()));
+                Debug.WriteLine("Velocity: " + Convert.ToString(particles[i].getVel()));
 
-                // predict pos and update grid for all particles then do calculations for all particles
-
-                // update grid
-                Vector2 gridSquare = particles[i].findGridSquare(); // runs off particle's predicted position
+                Vector2 gridSquare = particles[i].findGridSquare();
                 Debug.WriteLine("GridSquare: " + Convert.ToString(particles[i].getGridSquare()));
                 gridSquares[(int)gridSquare.X, (int)gridSquare.Y].addParticle(particles[i]);
+            }
 
-                // particle calculations
+            Debug.WriteLine(" ");
+
+            for (int i = 0; i < particleCount; i++)
+            {
+                Debug.WriteLine("Particle ID: " + Convert.ToString(particles[i].getID()));
                 List<Particle> nearbyParticles = getNearbyParticles(particles[i].getGridSquare(), particles[i].getID());
-                particles[i].calculateDensity(vol, smoothingRad, nearbyParticles);
-                Debug.WriteLine("Density: " + Convert.ToString(particles[i].getDensity()));
-                
+
                 Debug.WriteLine("Nearby Particles: ");
                 for (int j = 0; j < nearbyParticles.Count; j++)
                 {
                     Debug.WriteLine("ID: " + nearbyParticles[j].getID() + " Pos: " + nearbyParticles[j].getPos());
                 }
 
-                Vector2 pressureForce = calculatePressureGradient(particles[i].getPredictedPos(), nearbyParticles);
+                particles[i].setNearbyParticles(nearbyParticles);
+                Debug.WriteLine("Vol: " + Convert.ToString(vol));
+                particles[i].calculateDensity(vol, smoothingRad);
+            }
+
+            Debug.WriteLine(" ");
+
+            for (int i = 0; i < particleCount; i++)
+            {
+                Debug.WriteLine("Particle ID: " + Convert.ToString(particles[i].getID()));
+                Vector2 pressureForce = calculatePressureGradient(particles[i]);
                 Debug.WriteLine("Pressure force: " + Convert.ToString(pressureForce));
                 particles[i].applyPressureForce(pressureForce, timeInterval);
-
-                particles[i].updatePosition(timeInterval);
-                // Wall Collisions
-                if (frameCount != 0)
-                    particles[i].wallCollisions(walls);
-
-                Debug.WriteLine("New Pos: " + Convert.ToString(particles[i].getPos()));
             }
+
+
             Debug.WriteLine("----");
 
             // draw next frame
@@ -165,7 +207,7 @@ public partial class SimulationWindow : Form
 
         public float getVol(float s)
         {
-            return (float)((1f / 6f) * Math.PI * s * s * (3 * s * s - 8 * s + 6));
+            return (float)((1f / 6f) * Math.PI * s * s * ((3 * s * s) - (8 * s) + 6));
         }
 
         public List<Particle> getNearbyParticles(Vector2 gridSquare, int ID)
@@ -222,23 +264,28 @@ public partial class SimulationWindow : Form
             if (dist >= smoothingRad) return 0f;
             float coeff = dist / smoothingRad;
             float gradient = (2 * coeff - 2) / smoothingRad;
-            return gradient;
+            return 1 / gradient;
         }
 
-        public Vector2 calculatePressureGradient(Vector2 d, List<Particle> nearbyParticles)
+        public Vector2 calculatePressureGradient(Particle particle)
         {
+            Vector2 predPos = particle.getPredictedPos();
+            List<Particle> nearbyParticles = particle.getNearbyParticles();
+
             Vector2 pressureGrad = Vector2.Zero;
             for (int i = 0; i < nearbyParticles.Count; i++)
             {
-                if (d == nearbyParticles[i].getPredictedPos()) continue; // skip if self (this will also continue if two particles in same position but oh well)
-                Vector2 predPos = nearbyParticles[i].getPredictedPos();
-                float dist = Vector2.Distance(d, predPos);
-                Vector2 dir = (predPos - d) / dist;
+                if (predPos == nearbyParticles[i].getPredictedPos()) continue; // skip if self (this will also continue if two particles in same position but oh well)
+                Vector2 predPosI = nearbyParticles[i].getPredictedPos();
+                float dist = Vector2.Distance(predPos, predPosI);
+                Vector2 dir = (predPosI - predPos) / dist;
 
                 float slope = smoothingKernalDerivative(dist, smoothingRad);
                 float mass = nearbyParticles[i].getMass();
                 float density = nearbyParticles[i].getDensity();
-                pressureGrad += densityToPressure(density) * slope * dir * mass / density; // currently used for just pressure calcs but can be adapted for all properties
+                float pressure = densityToPressure(density);
+                Debug.WriteLine("Pres Grad Vars: " + Convert.ToString(pressure) + ", " + Convert.ToString(slope) + ", " + Convert.ToString(dir) + ", " + Convert.ToString(mass) + ", " + Convert.ToString(density));
+                pressureGrad += pressure * slope * dir * mass / density; // currently used for just pressure calcs but can be adapted for all properties
             }
             
             return -pressureGrad;

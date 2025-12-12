@@ -24,6 +24,7 @@ namespace Fluid_Sim_0._4
         private Vector2 currentSquare;
         private float gridSquareWidth;
         private int particleID;
+        private List<Particle> nearbyParticles;
 
         // only density being used rn, use properties array later
         private float density;
@@ -55,7 +56,8 @@ namespace Fluid_Sim_0._4
         public void applyPressureForce(Vector2 pressureForce, float timeInterval)
         {
             Vector2 accel = pressureForce / density;
-            Debug.WriteLine(density);
+            Debug.WriteLine("Density: " + Convert.ToString(density));
+            Debug.WriteLine("Accel: " + Convert.ToString(accel));
             vel += accel * timeInterval;
         }
 
@@ -64,7 +66,7 @@ namespace Fluid_Sim_0._4
             pos += vel * timeInterval;
         }
         
-        public void calculateDensity(float vol, float smoothingRad, List<Particle> nearbyParticles)
+        public void calculateDensity(float vol, float smoothingRad)
         {
             float cumulativeDensity = 0f;
             for (int i = 0; i < nearbyParticles.Count; i++)
@@ -76,7 +78,7 @@ namespace Fluid_Sim_0._4
                 cumulativeDensity += influence * mass; // replace density with an index of particle/properties to use fumction for stuff other than density
                 Debug.WriteLine("Cumulative Density: " + cumulativeDensity);
             }
-            this.density = cumulativeDensity / vol; // maybe div by volume not sure yet idk whats going on
+            density = cumulativeDensity; // maybe div by volume not sure yet idk whats going on
         }
 
         public float smoothingKernal(float dist, float smoothingRad)
@@ -84,12 +86,17 @@ namespace Fluid_Sim_0._4
             if (dist >= smoothingRad) return 0f;
             float coeff = dist / smoothingRad;
             float influence = coeff * coeff - 2 * coeff + 1;
-            return influence; // if doesn't work try returning influence * smoothingRad
+            return 1 / influence; // if doesn't work try returning influence * smoothingRad
         }
         public void predictPosition(float g, float timeInterval)
         {
             vel.Y += g * timeInterval;
             predictedPos = pos + vel * timeInterval;
+        }
+
+        public void setNearbyParticles(List<Particle> nearbyParticles)
+        {
+            this.nearbyParticles = nearbyParticles;
         }
         #endregion
         #region Object Interactions
@@ -175,6 +182,7 @@ namespace Fluid_Sim_0._4
         public Vector2 getVel() => vel;
         public float getDensity() => density;
         public int getID() => particleID;
+        public List<Particle> getNearbyParticles() => nearbyParticles;
         #endregion
 
         public async Task WatchForNaNAsync(Func<float> getter)
