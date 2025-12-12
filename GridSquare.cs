@@ -33,5 +33,9 @@ namespace Fluid_Sim_0._4
         {
             return particles;
         }
+        public void clearParticles()
+        {
+            particles.Clear();
+        }
     }
 }

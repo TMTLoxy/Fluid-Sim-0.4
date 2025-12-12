@@ -15,8 +15,9 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace Fluid_Sim_0._4
 {
-    // TO-DO list in Program.cs
-    public partial class SimulationWindow : Form
+
+// TO-DO list in Program.cs
+public partial class SimulationWindow : Form
     {
         #region Graphics & Menus
         private Form mainMenu;
@@ -38,7 +39,6 @@ namespace Fluid_Sim_0._4
         #region Grid & Walls
         private float gridSquareWidth;
         private GridSquare[,] gridSquares;
-        Vector2 gridSquareIndexMax;
         private List<Wall> walls;
         #endregion
         #region Sim Parameters
@@ -85,8 +85,11 @@ namespace Fluid_Sim_0._4
             // ioIndicator : true => outside the simulation is greater than the borderVal
             // currently no linked walls can add later once program is working (used mainly in wind tunnel)
             gridSquareWidth = smoothingRad * 3;
-            gridSquareIndexMax = simGridSetup();
+            simGridSetup();
             Debug.WriteLine("Grid Square Width: " + Convert.ToString(gridSquareWidth));
+
+            // initialize squares
+            
             #endregion
             # region particles
             this.smoothingRad = smoothingRad;
@@ -101,13 +104,18 @@ namespace Fluid_Sim_0._4
             }
             #endregion
             // dev tools
+            for (int i = 0; i < particles.Count; i++)
+            {
+                Vector2 gridSquare = particles[i].findGridSquare();
+                gridSquares[(int)gridSquare.X, (int)gridSquare.Y].addParticle(particles[i]);
+            }
         }
 
 
         public void SimulationClock_Tick(object sender, EventArgs e)
         {
-            // update the grids 
             frameCount++;
+            clearGrid();
             Debug.WriteLine("Frame Count: " + Convert.ToString(frameCount));
             for (int i = 0; i < particleCount; i++)
             {
@@ -120,15 +128,12 @@ namespace Fluid_Sim_0._4
                 particles[i].predictPosition(g, timeInterval);
                 Debug.WriteLine("Predicted Pos: " + Convert.ToString(particles[i].getPredictedPos()));
 
-                // this is stupid but leave for now
-                //// update the grid cells with the predicted positions (for each cell fill it with particles that are inside it)
-                //particles[i].updateToGridSquare(gridSquares);
+                // predict pos and update grid for all particles then do calculations for all particles
 
                 // update grid
                 Vector2 gridSquare = particles[i].findGridSquare(); // runs off particle's predicted position
                 Debug.WriteLine("GridSquare: " + Convert.ToString(particles[i].getGridSquare()));
                 gridSquares[(int)gridSquare.X, (int)gridSquare.Y].addParticle(particles[i]);
-
 
                 // particle calculations
                 List<Particle> nearbyParticles = getNearbyParticles(particles[i].getGridSquare(), particles[i].getID());
@@ -150,6 +155,7 @@ namespace Fluid_Sim_0._4
                 if (frameCount != 0)
                     particles[i].wallCollisions(walls);
 
+                Debug.WriteLine("New Pos: " + Convert.ToString(particles[i].getPos()));
             }
             Debug.WriteLine("----");
 
@@ -186,7 +192,7 @@ namespace Fluid_Sim_0._4
             return nearbyParticles;
         }
 
-        public Vector2 simGridSetup()
+        public void simGridSetup()
         {
             int gridCountX = (int)(windX / (gridSquareWidth)) + 1;
             int gridCountY = (int)(windY / (gridSquareWidth)) + 1;
@@ -198,7 +204,17 @@ namespace Fluid_Sim_0._4
                     gridSquares[i, j] = new GridSquare(gridSquareWidth);
                 }
             }
-            return new Vector2(gridCountX, gridCountY);
+        }
+
+        public void clearGrid()
+        {
+            for (int i = 0; i < gridSquares.GetLength(0); i++)
+            {
+                for (int j = 0; j < gridSquares.GetLength(1); j++)
+                {
+                    gridSquares[i, j].clearParticles();
+                }
+            }
         }
 
         public float smoothingKernalDerivative(float dist, float smoothingRad)
@@ -272,4 +288,8 @@ namespace Fluid_Sim_0._4
             else SimulationClock.Enabled = true;
         }
     }
+    
+    
+ 
 }
+

@@ -46,6 +46,8 @@ namespace Fluid_Sim_0._4
 
             this.gridSquareWidth = gridSquareWidth;
             setGridSquare();
+
+            // _ = WatchForNaNAsync(() => pos.X);
         }
 
 
@@ -53,6 +55,7 @@ namespace Fluid_Sim_0._4
         public void applyPressureForce(Vector2 pressureForce, float timeInterval)
         {
             Vector2 accel = pressureForce / density;
+            Debug.WriteLine(density);
             vel += accel * timeInterval;
         }
 
@@ -63,16 +66,17 @@ namespace Fluid_Sim_0._4
         
         public void calculateDensity(float vol, float smoothingRad, List<Particle> nearbyParticles)
         {
-            float density = 0f;
+            float cumulativeDensity = 0f;
             for (int i = 0; i < nearbyParticles.Count; i++)
             {
                 if (nearbyParticles[i].getPos() == pos) continue;
                 float dist = Vector2.Distance(predictedPos, nearbyParticles[i].getPredictedPos());
                 float influence = smoothingKernal(dist, smoothingRad);
                 float mass = nearbyParticles[i].getMass();
-                density += influence * mass; // replace density with an index of particle/properties to use fumction for stuff other than density
+                cumulativeDensity += influence * mass; // replace density with an index of particle/properties to use fumction for stuff other than density
+                Debug.WriteLine("Cumulative Density: " + cumulativeDensity);
             }
-            this.density = density; // maybe div by volume not sure yet idk whats going on
+            this.density = cumulativeDensity / vol; // maybe div by volume not sure yet idk whats going on
         }
 
         public float smoothingKernal(float dist, float smoothingRad)
@@ -172,5 +176,21 @@ namespace Fluid_Sim_0._4
         public float getDensity() => density;
         public int getID() => particleID;
         #endregion
+
+        public async Task WatchForNaNAsync(Func<float> getter)
+        {
+            while (true)
+            {
+                float val = getter();
+
+                if (float.IsNaN(val))
+                {
+                    Debug.WriteLine("NaN");
+                    Debug.WriteLine(Environment.StackTrace);
+                    break;
+                }
+                await Task.Delay(1);
+            }
+        }
     }
 }
